@@ -1,2 +1,2 @@
-# inverse-lqg
-Inverse optimal control for continuous psychophysics
+# Inverse optimal control for linear-quadratic Gaussian systems
+
