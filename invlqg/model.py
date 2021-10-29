@@ -3,8 +3,8 @@ import jax.numpy as jnp
 import numpyro.distributions as dist
 from jax.lax import scan
 
-from lqg.kalman import kalman_gain
-from lqg.lqr import control_law
+from invlqg.kalman import kalman_gain
+from invlqg.lqr import control_law
 
 
 class Dynamics:

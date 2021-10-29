@@ -1,7 +1,7 @@
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from lqg.model import System, Actor, Dynamics
+from invlqg.model import System, Actor, Dynamics
 
 
 class SubjectiveModel(System):
@@ -147,7 +147,7 @@ class DelayedSubjectiveVelocityModel(TemporalDelayModel):
 
 
 if __name__ == '__main__':
-    from lqg.analysis.ccg import xcorr
+    from invlqg.analysis.ccg import xcorr
 
     import matplotlib.pyplot as plt
 

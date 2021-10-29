@@ -3,8 +3,8 @@ from jax import random, lax
 import numpyro
 from numpyro.infer import SVI, Trace_ELBO
 
-from lqg.tracking import OneDimModel
-from lqg.infer.models import lqg_model
+from invlqg.tracking import OneDimModel
+from invlqg.infer.models import lqg_model
 
 
 def guide(x, model_type, process_noise=None, dt=None, **fixed_params):

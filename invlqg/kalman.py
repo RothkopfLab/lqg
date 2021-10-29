@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from jax.lax import scan
 import numpy as np
 
-from lqg.riccati import discrete_riccati
+from invlqg.riccati import discrete_riccati
 
 
 def kalman_gain(A, C, V, W, T):

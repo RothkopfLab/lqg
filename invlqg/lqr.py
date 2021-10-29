@@ -1,6 +1,6 @@
 from jax import numpy as jnp
 
-from lqg.riccati import discrete_riccati
+from invlqg.riccati import discrete_riccati
 
 
 def control_law(A, B, Q, R, T):

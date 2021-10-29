@@ -1,6 +1,6 @@
 from jax import numpy as jnp
 
-from lqg.kalman import KalmanFilter
+from invlqg.kalman import KalmanFilter
 
 
 class TrackingFilter(KalmanFilter):

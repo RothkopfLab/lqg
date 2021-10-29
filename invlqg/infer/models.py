@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import numpyro
 from numpyro import distributions as dist
 
-from lqg.infer.prior import prior
+from invlqg.infer.prior import prior
 
 
 def get_model_params(model_class):

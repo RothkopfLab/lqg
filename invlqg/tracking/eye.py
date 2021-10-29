@@ -3,8 +3,8 @@ import math
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from lqg.model import System, Dynamics, Actor
-from lqg.kalman import KalmanFilter
+from invlqg.model import System, Dynamics, Actor
+from invlqg.kalman import KalmanFilter
 
 
 class DampedSpringTrackingFilter(KalmanFilter):

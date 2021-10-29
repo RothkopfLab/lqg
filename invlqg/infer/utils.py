@@ -5,8 +5,8 @@ from numpyro.infer import NUTS, MCMC, SVI, Trace_ELBO
 from numpyro.infer.autoguide import AutoBNAFNormal
 from numpyro.infer.reparam import NeuTraReparam
 
-from lqg.infer.models import lifted_model as lqg_model
-from lqg.tracking import DiffModel
+from invlqg.infer.models import lifted_model as lqg_model
+from invlqg.tracking import DiffModel
 
 
 def infer(x, num_samples, num_warmup, model=DiffModel, numpyro_fn=lqg_model, process_noise=1., dt=1. / 60,
