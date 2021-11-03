@@ -1,16 +1,36 @@
 import jax.numpy as jnp
 from jax import random, lax
+import numpyro
+import numpyro.distributions as dist
 from numpyro import optim
 from numpyro.infer import NUTS, MCMC, SVI, Trace_ELBO
 from numpyro.infer.autoguide import AutoBNAFNormal
 from numpyro.infer.reparam import NeuTraReparam
 
-from invlqg.infer.models import lifted_model as lqg_model
-from invlqg.tracking import DiffModel
+from invlqg.infer.models import lifted_model as lqg_model, get_model_params
+from invlqg.model import conditional_distribution
+from invlqg.tracking import OneDimModel
+from invlqg.infer.prior import prior
+
+prior = prior()
 
 
-def infer(x, num_samples, num_warmup, model=DiffModel, numpyro_fn=lqg_model, process_noise=1., dt=1. / 60,
+def infer(x, num_samples, num_warmup, model=OneDimModel, numpyro_fn=lqg_model, process_noise=1., dt=1. / 60,
           method="nuts", progress_bar=True, num_chains=1, seed=0, **fixed):
+    params = {}
+    for name, default in get_model_params(model).items():
+        if not name in fixed:
+            params[name] = default
+
+    def numpyro_fn(x):
+        for name, default in params.items():
+            params[name] = numpyro.sample(name, prior[name])
+
+        lqg = model(process_noise=process_noise, dt=dt, **params, **fixed)
+
+        numpyro.sample("x", conditional_distribution(lqg, x[:-1]),
+                       obs=x[1:].transpose((1, 0, 2)))
+
     if method == "nuts":
         # setup kernel
         nuts_kernel = NUTS(numpyro_fn)
@@ -34,6 +54,7 @@ def infer(x, num_samples, num_warmup, model=DiffModel, numpyro_fn=lqg_model, pro
     # run NUTS
     mcmc = MCMC(nuts_kernel, num_samples=num_samples, num_warmup=num_warmup, progress_bar=progress_bar,
                 num_chains=num_chains)
-    mcmc.run(random.PRNGKey(seed), x, model, process_noise, dt, **fixed)
+    # mcmc.run(random.PRNGKey(seed), x, model, process_noise, dt, **fixed)
+    mcmc.run(random.PRNGKey(seed), x)
 
     return mcmc

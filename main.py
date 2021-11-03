@@ -2,12 +2,13 @@ import matplotlib.pyplot as plt
 import arviz as az
 
 from invlqg.tracking import OneDimModel
+from invlqg.model import simulate
 from invlqg.infer import infer
 
 if __name__ == '__main__':
     # setup model and simulate data
     model = OneDimModel(sigma=15., prop_noise=5., motor_noise=0.5, c=0.5)
-    x = model.simulate(n=20, T=500, seed=123)
+    x = simulate(model, n=20, T=500, seed=123)
 
     # visualize trajectories
     plt.plot(x[:, 0, 0])

@@ -6,19 +6,19 @@ import numpy as np
 from invlqg.riccati import solve_discrete_riccati
 
 
-def kalman_gain(A, C, V, W, T):
-    P = solve_discrete_riccati(A.T, C.T, V, W, T)
+def kalman_gain(A, H, V, W, T):
+    P = solve_discrete_riccati(A.T, H.T, V, W, T)
 
-    S = C @ P @ C.T + W
-    K = P @ C.T @ jnp.linalg.inv(S)
+    S = H @ P @ H.T + W
+    K = P @ H.T @ jnp.linalg.inv(S)
 
     return K
 
 
 class KalmanFilter:
-    def __init__(self, A, C, V, W):
+    def __init__(self, A, H, V, W):
         self.A = A
-        self.C = C
+        self.H = H
         self.V = V
         self.W = W
 
@@ -27,7 +27,7 @@ class KalmanFilter:
         return self.A.shape[0] * 2
 
     def K(self, T):
-        K = kalman_gain(self.A, self.C, self.V @ self.V.T, self.W @ self.W.T, T=T)
+        K = kalman_gain(self.A, self.H, self.V @ self.V.T, self.W @ self.W.T, T=T)
         return K
 
     def simulate(self, n=1, T=100, seed=0):
@@ -46,9 +46,9 @@ class KalmanFilter:
         for t in range(T):
             xi = xi @ self.A.T + np.random.normal(size=(n, self.A.shape[0])) @ V.T
 
-            yi = xi @ self.C.T + np.random.normal(size=(n, self.C.shape[0])) @ W.T
+            yi = xi @ self.H.T + np.random.normal(size=(n, self.H.shape[0])) @ W.T
 
-            xhat = xhat @ self.A.T + (yi - xhat @ self.A.T @ self.C.T) @ K.T
+            xhat = xhat @ self.A.T + (yi - xhat @ self.A.T @ self.H.T) @ K.T
 
             xs.append(xi)
             xhats.append(xhat)
@@ -84,9 +84,9 @@ class KalmanFilter:
             xi = xi @ A.T + np.random.normal(size=(n, A.shape[0])) @ V.T
             xi[:, 0] = x[t]
 
-            yi = xi @ self.C.T + np.random.normal(size=(n, self.C.shape[0])) @ W.T
+            yi = xi @ self.H.T + np.random.normal(size=(n, self.H.shape[0])) @ W.T
 
-            xhat = xhat @ self.A.T + (yi - xhat @ self.A.T @ self.C.T) @ K.T
+            xhat = xhat @ self.A.T + (yi - xhat @ self.A.T @ self.H.T) @ K.T
 
             xs.append(xi)
             xhats.append(xhat)
@@ -110,13 +110,13 @@ class KalmanFilter:
 
         F = jnp.vstack(
             [jnp.hstack([self.A, jnp.zeros_like(self.A)]),
-             jnp.hstack([K @ self.C @ self.A, self.A - K @ self.C @ self.A])])
+             jnp.hstack([K @ self.H @ self.A, self.A - K @ self.H @ self.A])])
 
         F = F[:, swapdim]
         F = F[swapdim, :]
 
         # TODO: this throws errors for the model with velocities..
-        G = jnp.vstack([jnp.hstack([V, jnp.zeros_like(V)]), jnp.hstack([K @ self.C @ V, K @ W])])
+        G = jnp.vstack([jnp.hstack([V, jnp.zeros_like(V)]), jnp.hstack([K @ self.H @ V, K @ W])])
 
         G = G[:, swapdim]
         G = G[swapdim, :]
