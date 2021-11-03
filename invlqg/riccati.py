@@ -1,21 +1,5 @@
 import jax.numpy as jnp
 from jax.lax import scan
-# from invlqg.riccati import implicit
-
-
-# def solve_discrete_riccati_fax(A, B, Q, R, T):
-#     def _make_riccati_operator(params):
-#         A, B, Q, R = params
-#
-#         def _riccati_operator(P):
-#             X = R + B.T @ P.T @ B
-#             Y = B.T @ P @ A
-#             return (A.T @ P @ A) - ((A.T @ P @ B) @ jnp.linalg.solve(X, Y)) + Q
-#
-#         return _riccati_operator
-#
-#     solution = implicit.two_phase_solve(_make_riccati_operator, jnp.eye(A.shape[0]), (A, B, Q, R))
-#     return solution
 
 
 def solve_discrete_riccati(A, B, Q, R, T):
