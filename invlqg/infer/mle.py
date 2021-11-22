@@ -1,5 +1,4 @@
-import jax.numpy as jnp
-from jax import random, lax
+from jax import random
 import numpyro
 from numpyro.infer import SVI, Trace_ELBO
 
