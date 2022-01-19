@@ -3,11 +3,11 @@ import jax.numpy as jnp
 from jax.lax import scan
 import numpy as np
 
-from invlqg.riccati import solve_discrete_riccati
+from lqg.riccati import discrete_riccati
 
 
 def kalman_gain(A, C, V, W, T):
-    P = solve_discrete_riccati(A.T, C.T, V, W, T)
+    P = discrete_riccati(A.T, C.T, V, W, T)
 
     S = C @ P @ C.T + W
     K = P @ C.T @ jnp.linalg.inv(S)
@@ -44,8 +44,12 @@ class KalmanFilter:
         xhat = jnp.zeros((n, self.A.shape[0]))
 
         for t in range(T):
+            # key, subkey = random.split(key)
+            # xi = dist.MultivariateNormal(xi @ self.A.T, scale_tril=V).sample(subkey)
             xi = xi @ self.A.T + np.random.normal(size=(n, self.A.shape[0])) @ V.T
 
+            # key, subkey = random.split(key)
+            # yi = dist.MultivariateNormal(xi @ self.C.T, scale_tril=W).sample(subkey)
             yi = xi @ self.C.T + np.random.normal(size=(n, self.C.shape[0])) @ W.T
 
             xhat = xhat @ self.A.T + (yi - xhat @ self.A.T @ self.C.T) @ K.T
@@ -81,9 +85,13 @@ class KalmanFilter:
         xhats.append(xhat)
 
         for t in range(1, T):
+            # key, subkey = random.split(key)
+            # xi = dist.MultivariateNormal(xi @ self.A.T, scale_tril=V).sample(subkey)
             xi = xi @ A.T + np.random.normal(size=(n, A.shape[0])) @ V.T
             xi[:, 0] = x[t]
 
+            # key, subkey = random.split(key)
+            # yi = dist.MultivariateNormal(xi @ self.C.T, scale_tril=W).sample(subkey)
             yi = xi @ self.C.T + np.random.normal(size=(n, self.C.shape[0])) @ W.T
 
             xhat = xhat @ self.A.T + (yi - xhat @ self.A.T @ self.C.T) @ K.T
@@ -138,3 +146,44 @@ class KalmanFilter:
 
     def log_likelihood(self, x):
         return self.conditional_distribution(x[:-1]).log_prob(x[1:].transpose((1, 0, 2)))
+
+    def mean_given_x(self, x):
+        T, n, d = x.shape
+
+        A = np.array(self.A)
+        C = np.array(self.C)
+
+        K = np.array(self.K(T))
+
+        xs = []
+        xhats = []
+
+        target = x[:, :, ::2]
+
+        xi = target[0]  # np.zeros((n, self.dynamics.A.shape[0])) if x0 is None else x0
+        xi = np.nan_to_num(xi)
+
+        # TODO: this is a problem for models in which the subjective dimensionality is different
+        xhat = x[0, :, 1::2]  # np.zeros((n, self.actor.A.shape[0])) if xhat0 is None else xhat0
+        xhat = np.nan_to_num(xhat)
+
+        xs.append(xi)
+        xhats.append(xhat)
+
+        for t in range(1, T):
+            # xi = xi @ A.T
+            xi = target[t]
+
+            yi = xi @ C.T
+
+            xhat = xhat @ A.T + (yi - xhat @ A.T @ C.T) @ K.T
+
+            xs.append(xi)
+            xhats.append(xhat)
+
+        x = np.stack(xs)
+        xhat = np.stack(xhats)
+
+        x = np.concatenate([x, xhat], axis=2)
+
+        return np.concatenate([x[..., ::2], x[..., 1::2]], axis=2)

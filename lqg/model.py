@@ -3,8 +3,8 @@ import jax.numpy as jnp
 import numpyro.distributions as dist
 from jax.lax import scan
 
-from invlqg.kalman import kalman_gain
-from invlqg.lqr import control_law
+from lqg.kalman import kalman_gain
+from lqg.lqr import control_law
 
 
 class Dynamics:
@@ -83,6 +83,10 @@ class System:
 
         xi = np.zeros((n, self.dynamics.A.shape[0])) if x0 is None else x0
         xhat = np.zeros((n, self.actor.A.shape[0])) if xhat0 is None else xhat0
+        # xhat = np.zeros((n, self.actor.A.shape[0]))
+        # xi = np.zeros((n, self.dynamics.A.shape[0]))
+        # xi = np.array(np.tile(self.x0, (n, 1)))
+        # xhat = np.array(np.tile(self.xhat0, (n, 1)))
         u = np.zeros((n, self.actor.B.shape[1])) if xhat0 is None else (-xhat0 @ L.T)
 
         xs = []
@@ -143,6 +147,10 @@ class System:
 
         xi = np.zeros((n, self.dynamics.A.shape[0])) if x0 is None else x0
         xhat = np.zeros((n, self.actor.A.shape[0])) if xhat0 is None else xhat0
+        # xhat = np.zeros((n, self.actor.A.shape[0]))
+        # xi = np.zeros((n, self.dynamics.A.shape[0]))
+        # xi = np.array(np.tile(self.x0, (n, 1)))
+        # xhat = np.array(np.tile(self.xhat0, (n, 1)))
 
         xs.append(xi)
 
@@ -184,6 +192,9 @@ class System:
                 """
         T, n, d = x.shape
 
+        # xdim = self.dynamics.A.shape[0]
+        # xhatdim = self.actor.A.shape[0]
+
         L = self.actor.L(T)
 
         K = self.actor.K(T)
@@ -194,11 +205,19 @@ class System:
              jnp.hstack([K @ self.dynamics.C @ self.dynamics.A,
                          self.actor.A - self.actor.B @ L - K @ self.actor.C @ self.actor.A])])
 
+        # G = jnp.vstack([jnp.hstack([V, jnp.zeros((d, d // 2)), jnp.zeros((d, d))]),
+        #                 jnp.hstack([K @ self.C @ V, K @ W, self.E - K @ self.C @ self.E])])
+
         G = jnp.vstack([jnp.hstack([self.dynamics.V, jnp.zeros_like(self.dynamics.C.T)]),
                         jnp.hstack([K @ self.dynamics.C @ self.dynamics.V, K @ self.actor.W])])
 
+        # mu = jnp.hstack((x[0], x[0]))
         mu = jnp.zeros((n, self.dynamics.A.shape[0] + self.actor.A.shape[0])) if mu0 is None else mu0
         Sigma = G @ G.T
+
+        # Sigma += jnp.eye(Sigma.shape[0]) * 1e-7
+
+        # return (x[0] - mu[:, :d]) # @ jnp.linalg.inv(Sigma[:d, :d]).T @ (F @ Sigma)[:, :d].T
 
         def f(carry, xt):
             mu, Sigma = carry
@@ -219,6 +238,46 @@ class System:
 
     def log_likelihood(self, x):
         return self.conditional_distribution(x[:-1]).log_prob(x[1:].transpose((1, 0, 2)))
+
+    def mean_given_x(self, x):
+        T, n, d = x.shape
+
+        A = np.array(self.dynamics.A)
+        B = np.array(self.dynamics.B)
+        C = np.array(self.dynamics.C)
+
+        L = np.array(self.actor.L(T=T))
+        K = np.array(self.actor.K(T=T))
+
+        A_act = np.array(self.actor.A)
+        B_act = np.array(self.actor.B)
+        C_act = np.array(self.actor.C)
+
+        xs = []
+
+        xi = x[0]  # np.zeros((n, self.dynamics.A.shape[0])) if x0 is None else x0
+        xi = np.nan_to_num(xi)
+
+        # TODO: this is a problem for models in which the subjective dimensionality is different
+        xhat = x[0]  # np.zeros((n, self.actor.A.shape[0])) if xhat0 is None else xhat0
+        xhat = np.nan_to_num(xhat)
+
+        xs.append(xi)
+
+        for t in range(1, T):
+            u = - xhat @ L.T
+
+            xi = xi @ A.T + u @ B.T
+            xi[~np.isnan(x[t])] = x[t][~np.isnan(x[t])]
+            # xi[:, 0:-2:2] = x[t]
+
+            x_pred = xhat @ A_act.T + u @ B_act.T
+
+            xhat = x_pred + (xi @ C.T - x_pred @ C_act.T) @ K.T
+
+            xs.append(xi)
+
+        return np.stack(xs)
 
 
 class LQG(System):

@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="invlqg",
+    name="lqg",
     version="0.0.1",
     author="Dominik Straub",
     author_email="dominik.straub@tu-darmstadt.de",
-    description="Inverse optimal control for linear quadratic Gaussian systems",
+    description="(Inverse) optimal control for linear quadratic Gaussian systems",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://git.rwth-aachen.de/dominik.straub/lqg-tracking",
+    url="https://github.com/dominikstrb/lqg",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

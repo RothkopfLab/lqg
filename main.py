@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import arviz as az
 
-from invlqg.tracking import OneDimModel
-from invlqg.infer import infer
+from lqg.tracking import OneDimModel
+from lqg.infer import infer
 
 if __name__ == '__main__':
     # setup model and simulate data

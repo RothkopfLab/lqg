@@ -1,7 +1,7 @@
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from invlqg.model import System, Actor, Dynamics
+from lqg.model import System, Actor, Dynamics
 
 
 class SubjectiveModel(System):
@@ -147,14 +147,19 @@ class DelayedSubjectiveVelocityModel(TemporalDelayModel):
 
 
 if __name__ == '__main__':
-    from invlqg.analysis.ccg import xcorr
+    from lqg.analysis.ccg import xcorr
 
     import matplotlib.pyplot as plt
 
     for model in [
-        SubjectiveVelocityModel(process_noise=1., sigma=6., c=.5, motor_noise=.5, subj_noise=1., subj_vel_noise=3.),
-        TemporalDelayModel(SubjectiveVelocityModel(process_noise=1., sigma=6., c=.5, motor_noise=.5, subj_noise=1.,
-                                                   subj_vel_noise=3.), delay=12)]:
+        SubjectiveVelocityModel(process_noise=1., sigma=6., c=.1, motor_noise=.5, subj_noise=1.,
+                                subj_vel_noise=10.),
+        SubjectiveVelocityModel(process_noise=1., sigma=6., c=.1, motor_noise=.5, subj_noise=1.,
+                                subj_vel_noise=0.)
+    ]:  # ,
+        # TemporalDelayModel(SubjectiveVelocityModel(process_noise=1., sigma=6., c=.5, motor_noise=.5, subj_noise=1.,
+        #                                            subj_vel_noise=3.), delay=12)]:
+
         x = model.simulate(n=20, T=500, seed=0)
 
         # plt.plot(x[:, 0, 0])

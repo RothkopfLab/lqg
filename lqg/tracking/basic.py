@@ -1,7 +1,7 @@
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from invlqg.model import System, Dynamics, Actor
+from lqg.model import System, Dynamics, Actor
 
 
 class DimModel(System):
