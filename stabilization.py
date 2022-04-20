@@ -5,9 +5,11 @@ from lqg.model import System, Dynamics, Actor
 
 
 class Stabilization(System):
-    def __init__(self, dim=2, process_noise=1.0, motor_noise=0.5,
-                 sigma_h=6.0, sigma_v=6.0, c=1.0, dt=1. / 60.):
+    def __init__(self, covar, process_noise=1.0, motor_noise=0.5, c=1.0,
+                 dt=1. / 60.):
         self.process_noise = process_noise
+
+        dim = covar.shape[0]
 
         # dynamics model
         A = jnp.array([[1., dt],
@@ -19,7 +21,6 @@ class Stabilization(System):
 
         # noise model
         V = jnp.diag(jnp.array([process_noise, motor_noise]))
-        W = jnp.diag(jnp.array([sigma]))
 
         # cost function
         Q = jnp.diag(jnp.array([1., 0]))
@@ -30,7 +31,7 @@ class Stabilization(System):
         B = linalg.block_diag(*[B] * dim)
         C = linalg.block_diag(*[C] * dim)
         V = linalg.block_diag(*[V] * dim)
-        W = linalg.block_diag(*[W] * dim)  # TODO: correlations
+        W = linalg.cholesky(covar)
         Q = linalg.block_diag(*[Q] * dim)
         R = linalg.block_diag(*[R] * dim)
 
@@ -51,23 +52,28 @@ if __name__ == '__main__':
 
     from lqg.ccg import xcorr
     from lqg.infer import infer
+    from lqg.infer.models import correlated_noise_model
 
-    for sigma in [6.0, 60.0]:
-        model = Stabilization(c=1., motor_noise=0.6, sigma=sigma)
+    model = Stabilization(c=1., motor_noise=0.6,
+                          covar=jnp.array([[6., 0.5],
+                                           [0.5, 12.]]))
 
-        x = model.simulate(n=25, T=500)
-        # plt.plot(x[:, 0, 0])
-        # plt.title(jnp.mean(x[..., 0] ** 2))
-        # plt.show()
+    x = model.simulate(n=25, T=500)
+    # plt.plot(x[:, 0, 0])
+    # plt.title(jnp.mean(x[..., 0] ** 2))
+    # plt.show()
 
-        lags, correls = xcorr(x[..., 0].T, x[..., 0].T, maxlags=400)
+    for d in [0, 2]:
+        lags, correls = xcorr(x[..., d].T, x[..., d].T, maxlags=400)
+
         start = lags.size // 2
         plt.plot(lags[start:], correls.mean(axis=0)[start:])
 
     plt.axhline(0, color="gray", linestyle="--")
     plt.show()
 
-    mcmc = infer(x, model=Stabilization, num_samples=5_000, num_warmup=2_000)
+    mcmc = infer(x, model=Stabilization, num_samples=5_000, num_warmup=2_000,
+                 numpyro_fn=correlated_noise_model)
 
     data = az.convert_to_inference_data(mcmc)
     az.plot_pair(data, kind="hexbin")

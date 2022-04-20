@@ -11,7 +11,7 @@ def get_model_params(model_class):
 
     parameters = {}
     for name, param in init_signature.parameters.items():
-        if name not in ["self", "dim", "dt", "process_noise", "delay"]:
+        if name not in ["self", "dim", "dt", "process_noise", "delay", "covar"]:
             parameters[param.name] = param.default
 
     return parameters
@@ -77,7 +77,30 @@ def loo_lqg_model(x, model_type, process_noise, dt=1. / 60., **fixed_params):
                        obs=xn[1:].transpose((1, 0, 2)))
 
 
+default_prior = prior()
+
 # apply priors
-lifted_model = numpyro.handlers.lift(lqg_model, prior=prior())
-lifted_common_model = numpyro.handlers.lift(common_lqg_model, prior=prior())
-lifted_loo_model = numpyro.handlers.lift(loo_lqg_model, prior=prior())
+lifted_model = numpyro.handlers.lift(lqg_model, prior=default_prior)
+lifted_common_model = numpyro.handlers.lift(common_lqg_model, prior=default_prior)
+lifted_loo_model = numpyro.handlers.lift(loo_lqg_model, prior=default_prior)
+
+
+def correlated_noise_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
+    d = x.shape[2] // 2
+
+    params = {}
+    for name, default in get_model_params(model_type).items():
+        if name in fixed_params:
+            params[name] = fixed_params[name]
+        else:
+            params[name] = numpyro.sample(name, default_prior[name])
+
+    L = numpyro.sample("covar", dist.LKJCholesky(d))
+    sigma = numpyro.sample("sigma", dist.HalfCauchy(jnp.ones(d) * 50.))
+
+    lqg = model_type(process_noise=process_noise, dt=dt, covar=jnp.diag(sigma) @ L, **params)
+
+    if x is not None:
+        # numpyro.sample("x0", dist.MultivariateNormal(jnp.zeros(lqg.A.shape[0]), V), obs=x[:, 0])
+        numpyro.sample("x", lqg.conditional_distribution(x[:-1]),
+                       obs=x[1:].transpose((1, 0, 2)))
