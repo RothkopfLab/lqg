@@ -95,7 +95,8 @@ def correlated_noise_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_
         else:
             params[name] = numpyro.sample(name, default_prior[name])
 
-    L = numpyro.sample("covar", dist.LKJCholesky(d))
+    L = numpyro.sample("chol", dist.LKJCholesky(d))
+    cor = numpyro.deterministic("cor", (L @ L.T)[1, 0])
     sigma = numpyro.sample("sigma", dist.HalfCauchy(jnp.ones(d) * 50.))
 
     lqg = model_type(process_noise=process_noise, dt=dt, covar=jnp.diag(sigma) @ L, **params)
