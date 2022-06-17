@@ -3,7 +3,7 @@ from jax import random, lax
 import numpyro
 from numpyro.infer import SVI, Trace_ELBO
 
-from lqg.tracking import OneDimModel
+from lqg.tracking import BoundedActor
 from lqg.infer.models import lqg_model, common_lqg_model
 
 
@@ -11,7 +11,7 @@ def guide(x, model_type, process_noise=None, dt=None, **fixed_params):
     pass
 
 
-def max_likelihood(x, model=OneDimModel, numpyro_fn=lqg_model, process_noise=1., dt=1. / 60, steps=2_000,
+def max_likelihood(x, model=BoundedActor, numpyro_fn=lqg_model, process_noise=1., dt=1. / 60, steps=2_000,
                    step_size=0.01, **fixed):
     # optim = numpyro.optim.ClippedAdam(step_size=step_size)
     optim = numpyro.optim.Adam(step_size=step_size)
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     motor_noise_true = .25
     sigma_true = 8.
     prop_noise_true = 2.
-    lqg = OneDimModel(process_noise=1.,
+    lqg = BoundedActor(process_noise=1.,
                       sigma=sigma_true, motor_noise=motor_noise_true, c=c_true, prop_noise=prop_noise_true)
 
     results = dict(c=[], sigma=[], motor_noise=[], prop_noise=[])

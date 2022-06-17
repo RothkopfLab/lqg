@@ -6,10 +6,10 @@ from numpyro.infer.autoguide import AutoBNAFNormal
 from numpyro.infer.reparam import NeuTraReparam
 
 from lqg.infer.models import lifted_model as lqg_model
-from lqg.tracking import DiffModel
+from lqg.tracking import BoundedActor
 
 
-def infer(x, num_samples, num_warmup, model=DiffModel, numpyro_fn=lqg_model, process_noise=1., dt=1. / 60,
+def infer(x, num_samples, num_warmup, model=BoundedActor, numpyro_fn=lqg_model, process_noise=1., dt=1. / 60,
           method="nuts", progress_bar=True, num_chains=1, seed=0, **fixed):
     if method == "nuts":
         # setup kernel
