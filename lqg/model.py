@@ -1,54 +1,37 @@
+from dataclasses import dataclass
 import numpy as np
 import jax.numpy as jnp
 import numpyro.distributions as dist
+from jax import vmap, random
 from jax.lax import scan
 
 from lqg.kalman import kalman_gain
 from lqg.lqr import control_law
 
 
+@dataclass
 class Dynamics:
-    def __init__(self, A, B, C, V):
-        self.A = A
-        self.B = B
-        self.C = C
-
-        self.V = V
-
-    def simulate(self, n=1, T=100, seed=0):
-        np.random.seed(seed)
-        V = self.V
-
-        xs = []
-
-        xi = jnp.zeros((n, self.A.shape[0]))
-
-        for t in range(0, T):
-            xi = xi @ self.A.T + np.random.normal(size=(n, self.A.shape[0])) @ V.T
-
-            xs.append(xi)
-
-        return jnp.stack(xs)
+    A: jnp.array
+    B: jnp.array
+    C: jnp.array
+    V: jnp.array
 
 
+@dataclass
 class Actor:
-    def __init__(self, A, B, C, V, W, Q, R):
-        self.A = A
-        self.B = B
-        self.C = C
+    A: jnp.array
+    B: jnp.array
+    C: jnp.array
+    V: jnp.array
+    W: jnp.array
+    Q: jnp.array
+    R: jnp.array
 
-        self.V = V
-        self.W = W
-
-        self.Q = Q
-        self.R = R
-
-    def L(self, T=100):
+    def L(self, T):
         return control_law(self.A, self.B, self.Q, self.R, T=T)
 
-    def K(self, T=100):
-        K = kalman_gain(self.A, self.C, self.V @ self.V.T, self.W @ self.W.T, T=T)
-        return K
+    def K(self, T):
+        return kalman_gain(self.A, self.C, self.V @ self.V.T, self.W @ self.W.T, T=T)
 
 
 class System:
@@ -64,121 +47,61 @@ class System:
     def udim(self):
         return self.dynamics.B.shape[1]
 
-    def simulate(self, n=1, T=100, seed=0, x0=None, xhat0=None, return_all=False):
-        np.random.seed(seed)
+    def simulate(self, rng_key, n=1, T=100, x0=None, return_all=False):
+        L = self.actor.L(T=T)
+        K = self.actor.K(T=T)
 
-        A = np.array(self.dynamics.A)
-        B = np.array(self.dynamics.B)
-        C = np.array(self.dynamics.C)
+        def simulate_trial(rng_key, T=100, x0=None):
+            """ Simulate a single trial
 
-        L = np.array(self.actor.L(T=T))
-        K = np.array(self.actor.K(T=T))
+            Args:
+                rng_key (jax.random.PRNGKey): random number generator key
+                T (int): number of time steps
+                x0 (jnp.array): initial state
 
-        W = np.array(self.actor.W)
-        V = np.array(self.dynamics.V)
+            Returns:
+                jnp.array, jnp.array, jnp.array, jnp.array: x (states), x_hat (estimates), y, u
+            """
 
-        A_act = np.array(self.actor.A)
-        B_act = np.array(self.actor.B)
-        C_act = np.array(self.actor.C)
+            x0 = jnp.zeros(self.xdim) if x0 is None else x0
 
-        xi = np.zeros((n, self.dynamics.A.shape[0])) if x0 is None else x0
-        xhat = np.zeros((n, self.actor.A.shape[0])) if xhat0 is None else xhat0
-        # xhat = np.zeros((n, self.actor.A.shape[0]))
-        # xi = np.zeros((n, self.dynamics.A.shape[0]))
-        # xi = np.array(np.tile(self.x0, (n, 1)))
-        # xhat = np.array(np.tile(self.xhat0, (n, 1)))
-        u = np.zeros((n, self.actor.B.shape[1])) if xhat0 is None else (-xhat0 @ L.T)
+            # generate standard normal noise terms
+            rng_key, subkey = random.split(rng_key)
+            epsilon = random.normal(subkey, shape=(T, x0.shape[0]))
+            rng_key, subkey = random.split(rng_key)
+            eta = random.normal(subkey, shape=(T, x0.shape[0]))
 
-        xs = []
+            def loop(carry, t):
+                x, x_hat = carry
 
-        if return_all:
-            xhats = []
-            ys = [] # [xi @ C.T + np.random.normal(size=(n, C.shape[0])) @ W.T]
-            us = []
+                # compute control based on agent's current belief
+                u = - L @ x_hat
 
-        for t in range(T):
+                # apply dynamics
+                x = self.dynamics.A @ x + self.dynamics.B @ u + self.dynamics.V @ epsilon[t]
 
+                # generate observation
+                y = self.dynamics.C @ x + self.actor.W @ eta[t]
 
-            xi = xi @ A.T + u @ B.T + np.random.normal(size=(n, A.shape[0])) @ V.T
-            # xi = random.multivariate_normal(subkey, xi @ self.A.T + u @ self.B.T, V)
+                # update agent's belief
+                x_pred = self.actor.A @ x_hat + self.actor.B @ u
+                x_hat = x_pred + K @ (y - self.actor.C @ x_pred)
 
-            yi = xi @ C.T + np.random.normal(size=(n, C.shape[0])) @ W.T
-            # yi = random.multivariate_normal(subkey, xi @ self.C.T, W)
+                return (x, x_hat), (x, x_hat, y, u)
 
-            x_pred = xhat @ A_act.T + u @ B_act.T
+            _, (x, x_hat, y, u) = scan(loop, (x0, x0), jnp.arange(1, T))
 
-            xhat = x_pred + (yi - x_pred @ C_act.T) @ K.T
+            return jnp.vstack([x0, x]), jnp.vstack([x0, x_hat]), \
+                   jnp.vstack([self.dynamics.C @ x0 + self.actor.V @ eta[0]]), u
 
-            u = - xhat @ L.T
-
-            xs.append(xi)
-
-            if return_all:
-                xhats.append(xhat)
-                ys.append(yi)
-                us.append(u)
+        # simulate n trials
+        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0),
+                              out_axes=1)(random.split(rng_key, num=n))
 
         if return_all:
-            return np.stack(xs), np.stack(xhats), np.stack(ys), np.stack(us)
+            return x, x_hat, y, u
         else:
-            return np.stack(xs)
-
-    def simulate_given_x(self, x, seed=0, x0=None, xhat0=None, return_all=False):
-
-        T, n = x.shape
-
-        np.random.seed(seed)
-
-        A = np.array(self.dynamics.A)
-        B = np.array(self.dynamics.B)
-        C = np.array(self.dynamics.C)
-
-        L = np.array(self.actor.L(T=T))
-        K = np.array(self.actor.K(T=T))
-
-        W = np.array(self.actor.W)
-        V = np.array(self.dynamics.V)
-
-        A_act = np.array(self.actor.A)
-        B_act = np.array(self.actor.B)
-        C_act = np.array(self.actor.C)
-
-        xs = []
-
-        xi = np.zeros((n, self.dynamics.A.shape[0])) if x0 is None else x0
-        xhat = np.zeros((n, self.actor.A.shape[0])) if xhat0 is None else xhat0
-        # xhat = np.zeros((n, self.actor.A.shape[0]))
-        # xi = np.zeros((n, self.dynamics.A.shape[0]))
-        # xi = np.array(np.tile(self.x0, (n, 1)))
-        # xhat = np.array(np.tile(self.xhat0, (n, 1)))
-
-        xs.append(xi)
-
-        if return_all:
-            xhats = [xhat]
-
-        for t in range(1, T):
-            u = - xhat @ L.T
-
-            xi = xi @ A.T + u @ B.T + np.random.normal(size=(n, A.shape[0])) @ V.T
-            xi[:, 0] = x[t]
-            # xi = random.multivariate_normal(subkey, xi @ self.A.T + u @ self.B.T, V)
-
-            yi = xi @ C.T + np.random.normal(size=(n, C.shape[0])) @ W.T
-            # yi = random.multivariate_normal(subkey, xi @ self.C.T, W)
-
-            x_pred = xhat @ A_act.T + u @ B_act.T
-
-            xhat = x_pred + (yi - x_pred @ C_act.T) @ K.T
-
-            xs.append(xi)
-            if return_all:
-                xhats.append(xhat)
-
-        if return_all:
-            return jnp.stack(xs), jnp.stack(xhats)
-        else:
-            return jnp.stack(xs)
+            return x
 
     def conditional_moments(self, x, mu0=None):
         """ Conditional distribution p(x | theta)
@@ -192,9 +115,6 @@ class System:
                 """
         T, n, d = x.shape
 
-        # xdim = self.dynamics.A.shape[0]
-        # xhatdim = self.actor.A.shape[0]
-
         L = self.actor.L(T)
 
         K = self.actor.K(T)
@@ -205,19 +125,11 @@ class System:
              jnp.hstack([K @ self.dynamics.C @ self.dynamics.A,
                          self.actor.A - self.actor.B @ L - K @ self.actor.C @ self.actor.A])])
 
-        # G = jnp.vstack([jnp.hstack([V, jnp.zeros((d, d // 2)), jnp.zeros((d, d))]),
-        #                 jnp.hstack([K @ self.C @ V, K @ W, self.E - K @ self.C @ self.E])])
-
         G = jnp.vstack([jnp.hstack([self.dynamics.V, jnp.zeros_like(self.dynamics.C.T)]),
                         jnp.hstack([K @ self.dynamics.C @ self.dynamics.V, K @ self.actor.W])])
 
-        # mu = jnp.hstack((x[0], x[0]))
         mu = jnp.zeros((n, self.dynamics.A.shape[0] + self.actor.A.shape[0])) if mu0 is None else mu0
         Sigma = G @ G.T
-
-        # Sigma += jnp.eye(Sigma.shape[0]) * 1e-7
-
-        # return (x[0] - mu[:, :d]) # @ jnp.linalg.inv(Sigma[:d, :d]).T @ (F @ Sigma)[:, :d].T
 
         def f(carry, xt):
             mu, Sigma = carry
@@ -239,49 +151,42 @@ class System:
     def log_likelihood(self, x):
         return self.conditional_distribution(x[:-1]).log_prob(x[1:].transpose((1, 0, 2)))
 
-    def mean_given_x(self, x):
-        T, n, d = x.shape
-
-        A = np.array(self.dynamics.A)
-        B = np.array(self.dynamics.B)
-        C = np.array(self.dynamics.C)
-
-        L = np.array(self.actor.L(T=T))
-        K = np.array(self.actor.K(T=T))
-
-        A_act = np.array(self.actor.A)
-        B_act = np.array(self.actor.B)
-        C_act = np.array(self.actor.C)
-
-        xs = []
-
-        xi = x[0]  # np.zeros((n, self.dynamics.A.shape[0])) if x0 is None else x0
-        xi = np.nan_to_num(xi)
-
-        # TODO: this is a problem for models in which the subjective dimensionality is different
-        xhat = x[0]  # np.zeros((n, self.actor.A.shape[0])) if xhat0 is None else xhat0
-        xhat = np.nan_to_num(xhat)
-
-        xs.append(xi)
-
-        for t in range(1, T):
-            u = - xhat @ L.T
-
-            xi = xi @ A.T + u @ B.T
-            xi[~np.isnan(x[t])] = x[t][~np.isnan(x[t])]
-            # xi[:, 0:-2:2] = x[t]
-
-            x_pred = xhat @ A_act.T + u @ B_act.T
-
-            xhat = x_pred + (xi @ C.T - x_pred @ C_act.T) @ K.T
-
-            xs.append(xi)
-
-        return np.stack(xs)
-
 
 class LQG(System):
     def __init__(self, A, B, C, V, W, Q, R):
         dynamics = Dynamics(A, B, C, V)
         actor = Actor(A, B, C, V, W, Q, R)
         super().__init__(actor=actor, dynamics=dynamics)
+
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+
+    dt = 1. / 60.
+
+    # parameters
+    action_variability = 0.5
+    sigma = 6.
+    sigma_prop = 3.
+    action_cost = 0.5
+
+    A = jnp.eye(2)
+    B = jnp.array([[0.], [dt]])
+    V = jnp.diag(jnp.array([1., action_variability]))
+
+    C = jnp.eye(2)
+    W = jnp.diag(jnp.array([sigma, sigma_prop]))
+
+    Q = jnp.array([[1., -1.],
+                   [-1., 1]])
+
+    R = jnp.eye(1) * action_cost
+
+    lqg = System(actor=Actor(A, B, C, V, W, Q, R),
+                 dynamics=Dynamics(A, B, C, V))
+
+    x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(2), n=10, T=1000)
+
+    plt.plot(x[:, 0, 0])
+    plt.plot(x[:, 0, 1])
+    plt.show()
