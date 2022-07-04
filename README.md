@@ -3,7 +3,8 @@
 ![Experimenter-actor-loop](https://raw.githubusercontent.com/RothkopfLab/lqg/main/img/experimenter-actor-loop.png)
 
 
-This repository contains code for the paper
+This repository contains the official implementation of method presented in our paper:
+
 > Straub, D., & Rothkopf, C. A. (2021). Putting perception into action: Inverse optimal control for continuous psychophysics. [bioRxiv.](https://www.biorxiv.org/content/10.1101/2021.12.23.473976v1.abstract)
 
 ## Installation
