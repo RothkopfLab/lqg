@@ -28,4 +28,4 @@ python -m pip install -e .
 
 - [`notebooks/01-HowTo.ipynb`](https://github.com/RothkopfLab/lqg/blob/main/notebooks/01-HowTo.ipynb) explains the model and its parameters in more detail, including the extension to subjective internal models.
 
-- [`notebooks/02-Data.ipynb](https://github.com/RothkopfLab/lqg/blob/main/notebooks/02-Data.ipynb) fits the ideal observer and subjective actor model to the data from [Bonnen et al. (2015)](https://jov.arvojournals.org/article.aspx?articleid=2301260) to reproduce Fig. 4A from our paper.
+- [`notebooks/02-Data.ipynb`](https://github.com/RothkopfLab/lqg/blob/main/notebooks/02-Data.ipynb) fits the ideal observer and subjective actor model to the data from [Bonnen et al. (2015)](https://jov.arvojournals.org/article.aspx?articleid=2301260) to reproduce Fig. 4A from our paper.
