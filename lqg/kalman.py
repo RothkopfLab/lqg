@@ -3,11 +3,11 @@ import jax.numpy as jnp
 from jax.lax import scan
 import numpy as np
 
-from lqg.riccati import discrete_riccati
+from lqg.riccati import solve_discrete_riccati
 
 
 def kalman_gain(A, C, V, W, T):
-    P = discrete_riccati(A.T, C.T, V, W, T)
+    P = solve_discrete_riccati(A.T, C.T, V, W, T)
 
     S = C @ P @ C.T + W
     K = P @ C.T @ jnp.linalg.inv(S)
