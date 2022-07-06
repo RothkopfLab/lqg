@@ -65,7 +65,7 @@ class System:
         """
         return self.dynamics.B.shape[1]
 
-    def simulate(self, rng_key, n=1, T=100, x0=None, return_all=False):
+    def simulate(self, rng_key, n=1, T=100, x0=None, xhat0=None, return_all=False):
         """ Simulate n trials
 
         Args:
@@ -128,7 +128,7 @@ class System:
                    jnp.vstack([self.dynamics.C @ x0 + self.dynamics.V @ eta[0]]), u
 
         # simulate n trials
-        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0),
+        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0, xhat0=xhat0),
                               out_axes=1)(random.split(rng_key, num=n))
 
         if return_all:
