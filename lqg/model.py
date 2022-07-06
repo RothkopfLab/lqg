@@ -4,8 +4,7 @@ import numpyro.distributions as dist
 from jax import vmap, random
 from jax.lax import scan
 
-from lqg.kalman import kalman_gain
-from lqg.lqr import control_law
+from lqg.riccati import kalman_gain, control_law
 
 
 @dataclass
@@ -35,7 +34,7 @@ class Actor:
 
 
 class System:
-    def __init__(self, actor, dynamics):
+    def __init__(self, actor: Actor, dynamics: Dynamics):
         self.actor = actor
         self.dynamics = dynamics
 
@@ -74,6 +73,7 @@ class System:
             n (int): number of trials
             T (int): number of time steps
             x0 (jnp.array): initial state
+            xhat0 (jnp.array): initial belief
             return_all (bool): return estimates, controls and observations as well
 
         Returns:
