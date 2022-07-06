@@ -26,7 +26,7 @@ class DimModel(System):
         Q = linalg.block_diag(*[jnp.array([[1., -1.], [-1., 1.]])] * dim)
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)
@@ -85,7 +85,7 @@ class DiffModel(System):
         Q = linalg.block_diag(*[jnp.array([[1., -1.], [-1., 1.]])] * dim)
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)
@@ -107,7 +107,7 @@ class VelocityModel(System):
         Q = jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., c]])
         R = jnp.eye(B.shape[1]) * 0.
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)
@@ -129,7 +129,7 @@ class VelocityDiffModel(System):
         Q = jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., c]])
         R = jnp.eye(B.shape[1]) * 0.
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)

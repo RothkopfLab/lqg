@@ -27,7 +27,7 @@ class Independent3DModel(System):
         Q = linalg.block_diag(*[jnp.array([[1., -1.], [-1., 1.]])] * dim)
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)
@@ -74,7 +74,7 @@ class Independent3DVelocityModel(System):
         Q = linalg.block_diag(*([jnp.array([[1., -1.], [-1., 1.]])] * dim + [jnp.zeros((dim, dim))]))
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)

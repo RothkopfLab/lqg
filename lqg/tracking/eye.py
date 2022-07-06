@@ -48,7 +48,7 @@ class DampedSpringModel(System):
         Q = linalg.block_diag(jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]]))
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
@@ -89,7 +89,7 @@ class DampedSpringSubjectiveModel(System):
         Q = linalg.block_diag(jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]]))
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         act = Actor(A=A_subj, B=B, C=C, V=V_subj, W=W, Q=Q, R=R)
 
@@ -125,7 +125,7 @@ class DampedSpringSubjectiveVelocityModel(System):
         Q = linalg.block_diag(jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]]))
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         act = Actor(A=A_subj, B=B, C=C, V=V_subj, W=W, Q=Q, R=R)
 
@@ -157,7 +157,7 @@ class DampedSpringDiffModel(System):
         Q = linalg.block_diag(jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]]))
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
@@ -200,7 +200,7 @@ class DampedSpringTwoDimFullModel(System):
                                          [0., 0., 0., 0., 0., 0.]]))
         R = jnp.diag(jnp.array([c_h, c_v]))
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
@@ -263,7 +263,7 @@ class DampedSpringTwoDimSubjectiveModel(System):
                                          [0., 0., 0., 0., 0., 0.]]))
         R = jnp.diag(jnp.array([c_h, c_v]))
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         act = Actor(A=A, B=B, C=C, V=V_subj, W=W, Q=Q, R=R)
 
@@ -320,7 +320,7 @@ class DampedSpringVelocityModel(System):
 
         R = jnp.eye(B.shape[1]) * c
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)

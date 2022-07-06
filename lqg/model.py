@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import numpy as np
 import jax.numpy as jnp
 import numpyro.distributions as dist
 from jax import vmap, random
@@ -15,6 +14,7 @@ class Dynamics:
     B: jnp.array
     C: jnp.array
     V: jnp.array
+    W: jnp.array
 
 
 @dataclass
@@ -41,29 +41,62 @@ class System:
 
     @property
     def xdim(self):
+        """ State dimensionality
+
+        Returns:
+            int: dimensionality of state
+        """
         return self.dynamics.A.shape[0]
 
     @property
+    def bdim(self):
+        """ Belief dimensionality
+
+        Returns:
+            int: dimensionality of belief
+        """
+        return self.actor.A.shape[0]
+
+    @property
     def udim(self):
+        """ Action dimensionality
+
+        Returns:
+            int: dimensionality of action
+        """
         return self.dynamics.B.shape[1]
 
     def simulate(self, rng_key, n=1, T=100, x0=None, return_all=False):
+        """ Simulate n trials
+
+        Args:
+            rng_key (jax.random.PRNGKey): random number generator key
+            n (int): number of trials
+            T (int): number of time steps
+            x0 (jnp.array): initial state
+            return_all (bool): return estimates, controls and observations as well
+
+        Returns:
+            jnp.array (T, n, d)
+        """
         L = self.actor.L(T=T)
         K = self.actor.K(T=T)
 
-        def simulate_trial(rng_key, T=100, x0=None):
+        def simulate_trial(rng_key, T=100, x0=None, xhat0=None):
             """ Simulate a single trial
 
             Args:
                 rng_key (jax.random.PRNGKey): random number generator key
                 T (int): number of time steps
                 x0 (jnp.array): initial state
+                xhat0 (jnp.array): initial belief
 
             Returns:
                 jnp.array, jnp.array, jnp.array, jnp.array: x (states), x_hat (estimates), y, u
             """
 
             x0 = jnp.zeros(self.xdim) if x0 is None else x0
+            xhat0 = jnp.zeros(self.bdim) if xhat0 is None else xhat0
 
             # generate standard normal noise terms
             rng_key, subkey = random.split(rng_key)
@@ -81,7 +114,7 @@ class System:
                 x = self.dynamics.A @ x + self.dynamics.B @ u + self.dynamics.V @ epsilon[t]
 
                 # generate observation
-                y = self.dynamics.C @ x + self.actor.W @ eta[t]
+                y = self.dynamics.C @ x + self.dynamics.W @ eta[t]
 
                 # update agent's belief
                 x_pred = self.actor.A @ x_hat + self.actor.B @ u
@@ -89,10 +122,10 @@ class System:
 
                 return (x, x_hat), (x, x_hat, y, u)
 
-            _, (x, x_hat, y, u) = scan(loop, (x0, x0), jnp.arange(1, T))
+            _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(1, T))
 
-            return jnp.vstack([x0, x]), jnp.vstack([x0, x_hat]), \
-                   jnp.vstack([self.dynamics.C @ x0 + self.actor.V @ eta[0]]), u
+            return jnp.vstack([x0, x]), jnp.vstack([xhat0, x_hat]), \
+                   jnp.vstack([self.dynamics.C @ x0 + self.dynamics.V @ eta[0]]), u
 
         # simulate n trials
         x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0),
@@ -126,7 +159,7 @@ class System:
                          self.actor.A - self.actor.B @ L - K @ self.actor.C @ self.actor.A])])
 
         G = jnp.vstack([jnp.hstack([self.dynamics.V, jnp.zeros_like(self.dynamics.C.T)]),
-                        jnp.hstack([K @ self.dynamics.C @ self.dynamics.V, K @ self.actor.W])])
+                        jnp.hstack([K @ self.dynamics.C @ self.dynamics.V, K @ self.dynamics.W])])
 
         mu = jnp.zeros((n, self.dynamics.A.shape[0] + self.actor.A.shape[0])) if mu0 is None else mu0
         Sigma = G @ G.T
@@ -154,7 +187,7 @@ class System:
 
 class LQG(System):
     def __init__(self, A, B, C, V, W, Q, R):
-        dynamics = Dynamics(A, B, C, V)
+        dynamics = Dynamics(A, B, C, V, W)
         actor = Actor(A, B, C, V, W, Q, R)
         super().__init__(actor=actor, dynamics=dynamics)
 
@@ -183,7 +216,7 @@ if __name__ == '__main__':
     R = jnp.eye(1) * action_cost
 
     lqg = System(actor=Actor(A, B, C, V, W, Q, R),
-                 dynamics=Dynamics(A, B, C, V))
+                 dynamics=Dynamics(A, B, C, V, W))
 
     x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(2), n=10, T=1000)
 

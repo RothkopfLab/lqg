@@ -12,7 +12,8 @@ class SubjectiveModel(System):
         C = jnp.eye(2)
 
         V = jnp.diag(jnp.array([process_noise, motor_noise]))
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        W = jnp.diag(jnp.array([sigma, prop_noise]))
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         A = jnp.eye(2)
         B = jnp.array([[0.], [10. * dt]])
@@ -23,8 +24,6 @@ class SubjectiveModel(System):
 
         Q = jnp.array([[1., -1.], [-1., 1.]])
         R = jnp.eye(B.shape[1]) * c
-
-        W = jnp.diag(jnp.array([sigma, prop_noise]))
 
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
@@ -43,7 +42,9 @@ class SubjectiveVelocityModel(System):
         # C = jnp.array([[1., 0, 0.], [0., 1., 0.]])
 
         V = jnp.diag(jnp.array([process_noise, motor_noise]))
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        W = jnp.diag(jnp.array([sigma, prop_noise]))
+
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         A = jnp.array([[1., 0., dt], [0., 1., 0.], [0., 0., 1.]])
         # A = jnp.array([[1., 0., dt, 0.], [0., 1., 0., dt], [0., 0., 1., 0.], [0., 0., 0., 1.]])
@@ -66,7 +67,6 @@ class SubjectiveVelocityModel(System):
         R = jnp.eye(B.shape[1]) * c
 
         # W = jnp.diag(jnp.array([sigma]))
-        W = jnp.diag(jnp.array([sigma, prop_noise]))
 
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
@@ -80,7 +80,9 @@ class SubjectiveVelocityDiffModel(System):
         C = jnp.array([[1., -1.]])
 
         V = jnp.diag(jnp.array([process_noise, motor_noise]))
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        W = jnp.diag(jnp.array([sigma]))
+
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         A = jnp.array([[1., 0., dt], [0., 1., 0.], [0., 0., 1.]])
         B = jnp.array([[0.], [10. * dt], [0.]])
@@ -93,8 +95,6 @@ class SubjectiveVelocityDiffModel(System):
 
         Q = jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]])
         R = jnp.eye(B.shape[1]) * c
-
-        W = jnp.diag(jnp.array([sigma]))
 
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
@@ -113,8 +113,9 @@ class TemporalDelayModel(System):
         C = jnp.hstack([jnp.zeros((dyn.C.shape[0], dyn.C.shape[1] * delay)), dyn.C])
 
         V = linalg.block_diag(dyn.V, jnp.diag(jnp.zeros(d * delay)))
+        W = dyn.W
 
-        dyn = Dynamics(A=A, B=B, C=C, V=V)
+        dyn = Dynamics(A=A, B=B, C=C, V=V, W=W)
 
         act = system.actor
         d = act.A.shape[0]
@@ -147,9 +148,10 @@ class DelayedSubjectiveVelocityModel(TemporalDelayModel):
 
 
 if __name__ == '__main__':
-    from lqg.analysis.ccg import xcorr
-
+    from jax import random
     import matplotlib.pyplot as plt
+
+    from lqg.ccg import xcorr
 
     for model in [
         SubjectiveVelocityModel(process_noise=1., sigma=6., c=.1, motor_noise=.5, subj_noise=1.,
@@ -160,7 +162,7 @@ if __name__ == '__main__':
         # TemporalDelayModel(SubjectiveVelocityModel(process_noise=1., sigma=6., c=.5, motor_noise=.5, subj_noise=1.,
         #                                            subj_vel_noise=3.), delay=12)]:
 
-        x = model.simulate(n=20, T=500, seed=0)
+        x = model.simulate(rng_key=random.PRNGKey(0), n=20, T=500)
 
         # plt.plot(x[:, 0, 0])
         # plt.plot(x[:, 0, 1])
