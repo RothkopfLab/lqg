@@ -48,6 +48,15 @@ class System:
         return self.dynamics.A.shape[0]
 
     @property
+    def ydim(self):
+        """ Observation dimensionality
+
+        Returns:
+            int: dimensionality of observation
+        """
+        return self.dynamics.C.shape[0]
+
+    @property
     def bdim(self):
         """ Belief dimensionality
 
@@ -100,9 +109,9 @@ class System:
 
             # generate standard normal noise terms
             rng_key, subkey = random.split(rng_key)
-            epsilon = random.normal(subkey, shape=(T, x0.shape[0]))
+            epsilon = random.normal(subkey, shape=(T, self.xdim))
             rng_key, subkey = random.split(rng_key)
-            eta = random.normal(subkey, shape=(T, x0.shape[0]))
+            eta = random.normal(subkey, shape=(T, self.ydim))
 
             def loop(carry, t):
                 x, x_hat = carry
@@ -125,7 +134,7 @@ class System:
             _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(1, T))
 
             return jnp.vstack([x0, x]), jnp.vstack([xhat0, x_hat]), \
-                   jnp.vstack([self.dynamics.C @ x0 + self.dynamics.V @ eta[0]]), u
+                   jnp.vstack([self.dynamics.C @ x0 + self.dynamics.W @ eta[0]]), u
 
         # simulate n trials
         x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0, xhat0=xhat0),
