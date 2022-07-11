@@ -35,9 +35,6 @@ def xcorr(x, y, maxlags=60, normed=True):
     return lags, correls
 
 
-import numpy as np
-
-
 def dog(x, a1, a2, mu1, mu2, sigma1, sigma2):
     g = a1 / (sigma1 * np.sqrt(2 * np.pi)) * np.exp(-.5 * (x - mu1) ** 2 / sigma1 ** 2)
     h = a2 / (sigma2 * np.sqrt(2 * np.pi)) * np.exp(-.5 * (x - mu2) ** 2 / sigma2 ** 2)
@@ -65,26 +62,3 @@ def fit_skewed_gabor(x, y):
                     bounds=(np.array([0., 0., .1, .1, .1]), np.array([1., 50., 50., 50., 5.])))
     params = res[0]
     return dict(a=params[0], mu=params[1], sigma1=params[2], sigma2=params[3], w=params[4])
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    from lqg.io.leap import load_tracking_data
-
-    # x = np.linspace(0, 60)
-
-    data, _ = load_tracking_data("S1", exp=2, delay=12, clip=60, subtract_mean=False, normalize=False,
-                                 path="../../data/annotated_data")
-
-    for data_i in data:
-        x = data_i.transpose((1, 0, 2))
-
-        lags, correls = xcorr(np.diff(x[..., 1], axis=0).T, np.diff(x[..., 0], axis=0).T, maxlags=60)
-
-        plt.plot(lags, correls.mean(axis=0))
-
-        res = fit_skewed_gabor(lags[60:], correls.mean(axis=0)[60:])
-
-        plt.plot(lags, skewed_gabor(lags, **res))
-        plt.show()
