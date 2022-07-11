@@ -1,9 +1,23 @@
 import jax.numpy as jnp
-from jax import numpy as jnp
 from jax.lax import scan
 
 
 def solve_discrete_riccati(A, B, Q, R, T):
+    """ Solve a discrete-time algebraic Riccati equation (DARE)
+    by iterating
+
+    S = A' (S - S B (B' S B + R)^-1 B' S) A + Q
+
+    Args:
+        A: square matrix
+        B: matrix
+        Q: matrix
+        R: square matrix
+        T: number of time steps
+
+    Returns:
+        jnp.array: solution of the DARE
+    """
     def riccati_iter(S, t):
         S = A.T @ (S - S @ B @ jnp.linalg.inv(B.T @ S @ B + R) @ B.T @ S) @ A + Q
         return S, S
