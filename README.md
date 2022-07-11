@@ -1,4 +1,4 @@
-# Inverse optimal control for linear-quadratic Gaussian systems
+# Inverse optimal control for continuous psychophysics
 
 ![Experimenter-actor-loop](https://raw.githubusercontent.com/RothkopfLab/lqg/main/img/experimenter-actor-loop.png)
 
