@@ -5,4 +5,3 @@ numpyro==0.7.1
 jax==0.2.17
 jaxlib==0.1.69
 arviz==0.11.2
-joblib==1.1.0
