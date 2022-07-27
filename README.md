@@ -29,3 +29,16 @@ python -m pip install -e .
 - [`notebooks/01-HowTo.ipynb`](https://github.com/RothkopfLab/lqg/blob/main/notebooks/01-HowTo.ipynb) explains the model and its parameters in more detail, including the extension to subjective internal models.
 
 - [`notebooks/02-Data.ipynb`](https://github.com/RothkopfLab/lqg/blob/main/notebooks/02-Data.ipynb) fits the ideal observer and subjective actor model to the [data](https://github.com/kbonnen/BonnenEtAl2015_KalmanFilterCode) from [Bonnen et al. (2015)](https://jov.arvojournals.org/article.aspx?articleid=2301260) to reproduce Fig. 4A from our paper.
+
+## Citation
+If you use our method in your research, please cite our preprint:
+
+```
+@article{straub2021putting,
+  title={Putting perception into action: Inverse optimal control for continuous psychophysics},
+  author={Straub, Dominik and Rothkopf, Constantin A},
+  journal={bioRxiv},
+  year={2021},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
