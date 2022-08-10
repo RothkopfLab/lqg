@@ -24,8 +24,7 @@ setuptools.setup(
         "scipy>=1.6.3",
         "matplotlib>=3.4.2",
         "numpyro==0.9.2",
-        "jax==0.3.7",
-        "jaxlib==0.3.7",
+        "jax[cpu]==0.3.7",
         "arviz>=0.11.2",
     ],
 )
