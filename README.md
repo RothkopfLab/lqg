@@ -19,7 +19,6 @@ although I recommend cloning the repository to get the most recent version and i
 ```bash
 python -m venv env
 source env/bin/activate
-python -m pip install -r requirements.txt
 python -m pip install -e .
 ```
 
