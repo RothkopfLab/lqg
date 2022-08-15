@@ -134,7 +134,7 @@ class System:
             _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(1, T))
 
             return jnp.vstack([x0, x]), jnp.vstack([xhat0, x_hat]), \
-                   jnp.vstack([self.dynamics.C @ x0 + self.dynamics.W @ eta[0]]), u
+                   jnp.vstack([self.dynamics.C @ x0 + self.dynamics.W @ eta[0], y]), u
 
         # simulate n trials
         x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0, xhat0=xhat0),
@@ -188,10 +188,10 @@ class System:
     def conditional_distribution(self, x):
         T, n, d = x.shape
         mu, Sigma = self.conditional_moments(x)
-        return dist.MultivariateNormal(mu[:, :, :d].transpose((1, 0, 2)), Sigma[:, :d, :d])
+        return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, jnp.newaxis, :d, :d])
 
     def log_likelihood(self, x):
-        return self.conditional_distribution(x[:-1]).log_prob(x[1:].transpose((1, 0, 2)))
+        return self.conditional_distribution(x[:-1]).log_prob(x[1:])
 
 
 class LQG(System):
