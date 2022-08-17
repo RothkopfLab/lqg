@@ -23,8 +23,8 @@ setuptools.setup(
         "numpy>=1.20.3",
         "scipy>=1.6.3",
         "matplotlib==3.2.2",
-        "numpyro[cpu]==0.9.2",
-        "jax[cpu]==0.3.15",
+        "numpyro==0.9.2",
+        "jax>=0.3.14",
         "arviz>=0.11.2",
     ],
 )
