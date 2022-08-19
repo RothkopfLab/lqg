@@ -157,10 +157,12 @@ class System:
                 """
         T, n, d = x.shape
 
+        # compute control and estimator gains
         L = self.actor.L(T)
-
         K = self.actor.K(T)
 
+        # set up joint dynamical system for state and belief
+        # p(x_t, xhat_t | x_{t-1}, xhat_{t-1})
         F = jnp.vstack(
             [jnp.hstack([self.dynamics.A,
                          -self.dynamics.B @ L]),
@@ -170,12 +172,14 @@ class System:
         G = jnp.vstack([jnp.hstack([self.dynamics.V, jnp.zeros_like(self.dynamics.C.T)]),
                         jnp.hstack([K @ self.dynamics.C @ self.dynamics.V, K @ self.dynamics.W])])
 
+        # initialize p(x_t, xhat_t | x_{1:t-1})
         mu = jnp.zeros((n, self.dynamics.A.shape[0] + self.actor.A.shape[0])) if mu0 is None else mu0
         Sigma = G @ G.T
 
         def f(carry, xt):
             mu, Sigma = carry
 
+            # condition on observed state x_t
             mu = mu @ F.T + (xt - mu[:, :d]) @ jnp.linalg.inv(Sigma[:d, :d]).T @ (F @ Sigma)[:, :d].T
 
             Sigma = F @ Sigma @ F.T + G @ G.T - (F @ Sigma)[:, :d] @ jnp.linalg.inv(Sigma[:d, :d]) @ (Sigma @ F.T)[:d,
@@ -199,36 +203,3 @@ class LQG(System):
         dynamics = Dynamics(A, B, C, V, W)
         actor = Actor(A, B, C, V, W, Q, R)
         super().__init__(actor=actor, dynamics=dynamics)
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    dt = 1. / 60.
-
-    # parameters
-    action_variability = 0.5
-    sigma = 6.
-    sigma_prop = 3.
-    action_cost = 0.5
-
-    A = jnp.eye(2)
-    B = jnp.array([[0.], [dt]])
-    V = jnp.diag(jnp.array([1., action_variability]))
-
-    C = jnp.eye(2)
-    W = jnp.diag(jnp.array([sigma, sigma_prop]))
-
-    Q = jnp.array([[1., -1.],
-                   [-1., 1]])
-
-    R = jnp.eye(1) * action_cost
-
-    lqg = System(actor=Actor(A, B, C, V, W, Q, R),
-                 dynamics=Dynamics(A, B, C, V, W))
-
-    x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(2), n=10, T=1000)
-
-    plt.plot(x[:, 0, 0])
-    plt.plot(x[:, 0, 1])
-    plt.show()
