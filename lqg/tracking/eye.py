@@ -18,7 +18,7 @@ class DampedSpringTrackingFilter(KalmanFilter):
 
         V = jnp.diag(jnp.array([1e-7, sigma_w]))
         W = jnp.diag(jnp.array([sigma]))
-        super().__init__(A, C, V, W)
+        super().__init__(Dynamics(A, None, C, V, W))
 
 
 class DampedSpringModel(System):
