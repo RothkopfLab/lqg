@@ -131,7 +131,7 @@ class KalmanFilter:
 
         _, (mu, Sigma) = scan(f, (mu, Sigma), x)
 
-        return dist.MultivariateNormal(mu.transpose((1, 0, 2)), Sigma)
+        return dist.MultivariateNormal(mu, Sigma[:, jnp.newaxis])
 
     def log_likelihood(self, x):
-        return self.conditional_distribution(x[:-1]).log_prob(x[1:].transpose((1, 0, 2)))
+        return self.conditional_distribution(x[:-1]).log_prob(x[1:])

@@ -324,15 +324,3 @@ class DampedSpringVelocityModel(System):
         act = Actor(A=A, B=B, C=C, V=V, W=W, Q=Q, R=R)
 
         super().__init__(actor=act, dynamics=dyn)
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    model = DampedSpringTrackingFilter(sigma=40.)
-
-    x = model.simulate(n=20, T=1000)
-
-    plt.plot(x[:, 0, 0])
-    plt.plot(x[:, 0, 1])
-    plt.show()
