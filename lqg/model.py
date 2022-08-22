@@ -191,11 +191,25 @@ class System:
 
     def conditional_distribution(self, x):
         T, n, d = x.shape
+
+        # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
         mu, Sigma = self.conditional_moments(x)
+
+        # marginalize out xhat by using only those entries of mu and Sigma that correspond to x
         return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, jnp.newaxis, :d, :d])
 
     def log_likelihood(self, x):
+        # log likelihood of the states at time t+1 given all previous states up to time t
         return self.conditional_distribution(x[:-1]).log_prob(x[1:])
+
+    def belief_tracking_distribution(self, x):
+        d = self.xdim
+
+        # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
+        mu, Sigma = self.conditional_moments(x)
+
+        # return those elements of mu and Sigma that correspond to xhat
+        return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, jnp.newaxis, d:, d:])
 
 
 class LQG(System):
