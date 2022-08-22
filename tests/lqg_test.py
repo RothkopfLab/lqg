@@ -2,6 +2,7 @@ import jax.numpy as jnp
 from jax import random
 
 from lqg.model import System, Actor, Dynamics
+from lqg.tracking import BoundedActor, SubjectiveActor
 
 
 def test_simulate():
@@ -31,3 +32,14 @@ def test_simulate():
     x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(2), n=10, T=1000)
 
     assert x.shape == (1000, 10, 2)
+
+
+def test_simulate_subjective():
+    bounded_actor = BoundedActor(process_noise=1., sigma=6., c=.1, motor_noise=.5, prop_noise=3.)
+    subjective_actor = SubjectiveActor(process_noise=1., sigma=6., c=.1, motor_noise=.5, prop_noise=3.,
+                                       subj_noise=1., subj_vel_noise=0.)
+
+    x_b = bounded_actor.simulate(rng_key=random.PRNGKey(0), n=20, T=500)
+    x_s = subjective_actor.simulate(rng_key=random.PRNGKey(0), n=20, T=500)
+
+    assert jnp.allclose(x_b, x_s)
