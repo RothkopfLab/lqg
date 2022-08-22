@@ -8,7 +8,7 @@ This repository contains the official implementation of the inverse optimal cont
 > Straub, D., & Rothkopf, C. A. (2021). Putting perception into action: Inverse optimal control for continuous psychophysics. [bioRxiv.](https://www.biorxiv.org/content/10.1101/2021.12.23.473976v1.abstract)
 
 ## CCN 2022 tutorial
-For our [tutorial at CCN 2022](https://2022.ccneuro.org/view_event.php?mid=19), you can follow along in the Jupyter notebook [CCN_2022_Tutorial.ipynb](https://github.com/RothkopfLab/lqg/blob/main/CCN_2022_Tutorial.ipynb). To run the notebook, you can either install the `lqg` package locally (see [below](https://github.com/RothkopfLab/lqg#installation)) or [open it in the browser](https://colab.research.google.com/github/dominikstrb/lqg/blob/main/CCN_2022_Tutorial.ipynb) on Google Colab.
+For our [tutorial at CCN 2022](https://2022.ccneuro.org/view_event.php?mid=19), you can follow along in the Jupyter notebook [CCN_2022_Tutorial.ipynb](https://github.com/RothkopfLab/lqg/blob/main/CCN_2022_Tutorial.ipynb). To run the notebook, you can either install the `lqg` package locally (see [below](https://github.com/RothkopfLab/lqg#installation)) or [open it in the browser](https://colab.research.google.com/github/RothkopfLab/lqg/blob/main/CCN_2022_Tutorial.ipynb) on Google Colab.
 
 ## Installation
 The package can be installed via `pip`
