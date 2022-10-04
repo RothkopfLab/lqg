@@ -5,7 +5,7 @@
 
 This repository contains the official implementation of the inverse optimal control method presented in the paper:
 
-> Straub, D., & Rothkopf, C. A. (2021). Putting perception into action: Inverse optimal control for continuous psychophysics. [bioRxiv.](https://www.biorxiv.org/content/10.1101/2021.12.23.473976v1.abstract)
+> [Straub, D., & Rothkopf, C. A. (2022). Putting perception into action with inverse optimal control for continuous psychophysics. eLife, 11, e76635.](https://elifesciences.org/articles/76635)
 
 ## CCN 2022 tutorial
 For our [tutorial at CCN 2022](https://2022.ccneuro.org/view_event.php?mid=19), you can follow along in the Jupyter notebook [CCN_2022_Tutorial.ipynb](https://github.com/RothkopfLab/lqg/blob/main/notebooks/CCN_2022_Tutorial.ipynb). To run the notebook, you can either install the `lqg` package locally (see [below](https://github.com/RothkopfLab/lqg#installation)) or [open it in the browser](https://colab.research.google.com/github/RothkopfLab/lqg/blob/main/notebooks/CCN_2022_Tutorial.ipynb) on Google Colab.
@@ -33,14 +33,19 @@ python -m pip install -e .
 - [`notebooks/02-Data.ipynb`](https://github.com/RothkopfLab/lqg/blob/main/notebooks/02-Data.ipynb) fits the ideal observer and bounded actor model to the [data](https://github.com/kbonnen/BonnenEtAl2015_KalmanFilterCode) from [Bonnen et al. (2015)](https://jov.arvojournals.org/article.aspx?articleid=2301260) to reproduce Fig. 4A from our paper.
 
 ## Citation
-If you use our method in your research, please cite our preprint:
+If you use our method in your research, please cite our paper:
 
 ```
-@article{straub2021putting,
-  title={Putting perception into action: Inverse optimal control for continuous psychophysics},
+@article{straub2022putting,
+  title={Putting perception into action with inverse optimal control for continuous psychophysics},
   author={Straub, Dominik and Rothkopf, Constantin A},
-  journal={bioRxiv},
-  year={2021},
-  publisher={Cold Spring Harbor Laboratory}
+  journal={eLife},
+  volume={11},
+  pages={e76635},
+  year={2022},
+  publisher={eLife Sciences Publications Limited}
 }
 ```
+
+## Signal-dependent noise
+This implementation supports the basic LQG framework. For the extension to signal-dependent noise [(Todorov, 2005)](https://direct.mit.edu/neco/article-abstract/17/5/1084/6949/Stochastic-Optimal-Control-and-Estimation-Methods), please see [our NeurIPS 2021 paper](https://proceedings.neurips.cc/paper/2021/hash/4e55139e019a58e0084f194f758ffdea-Abstract.html) and [its implementation](https://github.com/RothkopfLab/inverse-optimal-control).
