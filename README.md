@@ -3,7 +3,7 @@
 ![Experimenter-actor-loop](https://raw.githubusercontent.com/RothkopfLab/lqg/main/docs/source/_static/experimenter-actor-loop.png)
 
 
-This repository contains the official implementation of the inverse optimal control method presented in the paper:
+This repository contains the official [JAX](https://github.com/google/jax) implementation of the inverse optimal control method presented in the paper:
 
 > [Straub, D., & Rothkopf, C. A. (2022). Putting perception into action with inverse optimal control for continuous psychophysics. eLife, 11, e76635.](https://elifesciences.org/articles/76635)
 
