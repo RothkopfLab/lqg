@@ -142,7 +142,8 @@ class System:
             numpyro.distributions.MultivariateNormal
         """
         T, obs_dim = x.shape
-        dim = self.dynamics.A.shape[1]
+        xdim = self.dynamics.A.shape[1]
+        bdim = self.actor.A.shape[1]
 
         # compute control and estimator gains
         gains = lqr.backward(self.actor)
@@ -162,14 +163,14 @@ class System:
         # joint noise covariance Cholesky factor
         G = jnp.concatenate([
             jnp.concatenate([self.dynamics.V,
-                             jnp.zeros_like(self.dynamics.F)], axis=-1),
-            jnp.concatenate([jnp.zeros_like(self.actor.A),
+                             jnp.zeros((T, self.dynamics.A.shape[1], self.dynamics.W.shape[2]))], axis=-1),
+            jnp.concatenate([jnp.zeros((T, self.actor.A.shape[1], self.dynamics.A.shape[2])),
                              K @ self.dynamics.W], axis=-1)],
             axis=-2)
 
         # initialize p(x_t, xhat_t | x_{1:t-1})
         # TODO: initialization should not always be zero for the unobserved dims
-        mu = jnp.hstack([x[0], jnp.zeros(dim * 2 - obs_dim)])
+        mu = jnp.hstack([x[0], jnp.zeros(xdim - obs_dim + bdim)])
         Sigma = G[0] @ G[0].T
 
         def scan_fn(carry, step):
