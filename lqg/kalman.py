@@ -12,10 +12,19 @@ class KalmanFilter:
         self.dynamics = dynamics
 
     @property
+    def T(self):
+        """ Length of trajectory
+
+        Returns:
+            int: number of time steps
+        """
+        return self.dynamics.A.shape[0]
+
+    @property
     def xdim(self):
         return self.dynamics.A.shape[1] * 2
 
-    def simulate(self, rng_key, n=1, T=100, x0=None, xhat0=None):
+    def simulate(self, rng_key, n=1, x0=None, xhat0=None):
         """ Simulate n trials
 
         Args:
@@ -32,7 +41,7 @@ class KalmanFilter:
         # compute Kalman gain
         K = kf.forward(self.dynamics, Sigma0=self.dynamics.V[0] @ self.dynamics.V[0].T)
 
-        def simulate_trial(rng_key, T=100, x0=None, xhat0=None):
+        def simulate_trial(rng_key, x0=None, xhat0=None):
             """ Simulate a single trial
 
             Args:
@@ -50,9 +59,9 @@ class KalmanFilter:
 
             # generate standard normal noise terms
             rng_key, subkey = random.split(rng_key)
-            epsilon = random.normal(subkey, shape=(T, x0.shape[0]))
+            epsilon = random.normal(subkey, shape=(self.T, x0.shape[0]))
             rng_key, subkey = random.split(rng_key)
-            eta = random.normal(subkey, shape=(T, x0.shape[0]))
+            eta = random.normal(subkey, shape=(self.T, x0.shape[0]))
 
             def loop(carry, t):
                 x, x_hat = carry
@@ -69,7 +78,7 @@ class KalmanFilter:
 
                 return (x, x_hat), (x, x_hat, y)
 
-            _, (x, x_hat, y) = scan(loop, (x0, xhat0), jnp.arange(1, T))
+            _, (x, x_hat, y) = scan(loop, (x0, xhat0), jnp.arange(1, self.T))
 
             x = jnp.vstack((x0, x))
             x_hat = jnp.vstack((xhat0, x_hat))
@@ -83,7 +92,7 @@ class KalmanFilter:
             return jnp.hstack([x[..., ::2], x[..., 1::2]])
 
         # simulate n trials
-        x = vmap(lambda key: simulate_trial(key, T=T, x0=x0, xhat0=xhat0),
+        x = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0),
                  out_axes=1)(random.split(rng_key, num=n))
 
         return x

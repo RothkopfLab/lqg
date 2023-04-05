@@ -14,6 +14,15 @@ class System:
         self.dynamics = dynamics
 
     @property
+    def T(self):
+        """ Length of trajectory
+
+        Returns:
+            int: number of time steps
+        """
+        return self.dynamics.A.shape[0]
+
+    @property
     def xdim(self):
         """ State dimensionality
 
@@ -49,7 +58,7 @@ class System:
         """
         return self.dynamics.B.shape[2]
 
-    def simulate(self, rng_key, n=1, T=100, x0=None, xhat0=None, return_all=False):
+    def simulate(self, rng_key, n=1, x0=None, xhat0=None, return_all=False):
         """ Simulate n trials
 
         Args:
@@ -67,7 +76,7 @@ class System:
         gains = lqr.backward(self.actor)
         K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T)
 
-        def simulate_trial(rng_key, T=100, x0=None, xhat0=None):
+        def simulate_trial(rng_key, x0=None, xhat0=None):
             """ Simulate a single trial
 
             Args:
@@ -85,9 +94,9 @@ class System:
 
             # generate standard normal noise terms
             rng_key, subkey = random.split(rng_key)
-            epsilon = random.normal(subkey, shape=(T, self.xdim))
+            epsilon = random.normal(subkey, shape=(self.T, self.xdim))
             rng_key, subkey = random.split(rng_key)
-            eta = random.normal(subkey, shape=(T, self.ydim))
+            eta = random.normal(subkey, shape=(self.T, self.ydim))
 
             def loop(carry, t):
                 x, x_hat = carry
@@ -107,7 +116,7 @@ class System:
 
                 return (x, x_hat), (x, x_hat, y, u)
 
-            _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(1, T))
+            _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(1, self.T))
 
             return (jnp.vstack([x0, x]),
                     jnp.vstack([xhat0, x_hat]),
@@ -115,7 +124,7 @@ class System:
                     u)
 
         # simulate n trials
-        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0, xhat0=xhat0),
+        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0),
                               out_axes=1)(random.split(rng_key, num=n))
 
         if return_all:
@@ -188,10 +197,3 @@ class System:
 
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, jnp.newaxis, d:, d:])
-
-
-class LQG(System):
-    def __init__(self, A, B, C, V, W, Q, R):
-        dynamics = Dynamics(A, B, C, V, W)
-        actor = Actor(A, B, C, V, W, Q, R)
-        super().__init__(actor=actor, dynamics=dynamics)
