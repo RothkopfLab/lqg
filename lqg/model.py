@@ -188,7 +188,7 @@ class System:
         return mu, Sigma
 
     def conditional_distribution(self, x):
-        T, n, d = x.shape
+        n, T, d = x.shape
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
         mu, Sigma = vmap(self.conditional_moments)(x)
@@ -198,7 +198,7 @@ class System:
 
     def log_likelihood(self, x):
         # log likelihood of the states at time t+1 given all previous states up to time t
-        return self.conditional_distribution(x[:-1]).log_prob(x[1:])
+        return self.conditional_distribution(x[:, :-1]).log_prob(x[:, 1:])
 
     def belief_tracking_distribution(self, x):
         d = self.xdim

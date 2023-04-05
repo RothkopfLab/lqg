@@ -11,13 +11,15 @@ def get_model_params(model_class):
 
     parameters = {}
     for name, param in init_signature.parameters.items():
-        if name not in ["self", "dim", "dt", "process_noise", "delay", "covar"]:
+        if name not in ["self", "dim", "dt", "T", "process_noise", "delay", "covar"]:
             parameters[param.name] = param.default
 
     return parameters
 
 
 def lqg_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
+    n, T, d = x.shape
+
     params = {}
     for name, default in get_model_params(model_type).items():
         if name in fixed_params:
@@ -25,17 +27,13 @@ def lqg_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
         else:
             params[name] = numpyro.param(name, jnp.array(default), constraint=dist.constraints.positive)
 
-    # dim = x.shape[2] // 2
-    lqg = model_type(process_noise=process_noise, dt=dt, **params)
+    lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, **params)
 
-    if x is not None:
-        # numpyro.sample("x0", dist.MultivariateNormal(jnp.zeros(lqg.A.shape[0]), V), obs=x[:, 0])
-        numpyro.sample("x", lqg.conditional_distribution(x[:-1]),
-                       obs=x[1:])
+    numpyro.sample("x", lqg.conditional_distribution(x[:, :-1]), obs=x[:, 1:])
 
 
 def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_params):
-    Nc, T, N, d = x.shape
+    Nc, N, T, d = x.shape
 
     params = {}
     for name, default in get_model_params(model_type).items():
@@ -50,15 +48,15 @@ def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_param
         # observation noise
         sigma_n = numpyro.param(f"sigma_{n}", jnp.array(1.), constraint=dist.constraints.positive)
 
-        lqg = model_type(process_noise=process_noise, dt=dt, sigma=sigma_n, **params)
+        lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, sigma=sigma_n, **params)
 
         numpyro.sample(f"x_{n}",
-                       lqg.conditional_distribution(xn[:-1]),
-                       obs=xn[1:])
+                       lqg.conditional_distribution(xn[:, :-1]),
+                       obs=xn[:, 1:])
 
 
 def loo_lqg_model(x, model_type, process_noise, dt=1. / 60., **fixed_params):
-    Nc, T, N, d = x.shape
+    Nc, N, T, d = x.shape
 
     params = {}
     for name, default in get_model_params(model_type).items():
@@ -70,11 +68,11 @@ def loo_lqg_model(x, model_type, process_noise, dt=1. / 60., **fixed_params):
     for n in range(Nc):
         xn = x[n]
 
-        lqg = model_type(process_noise=process_noise[n], dt=dt, **params)
+        lqg = model_type(process_noise=process_noise[n], dt=dt, T=T - 1, **params)
 
         numpyro.sample(f"x_{n}",
-                       lqg.conditional_distribution(xn[:-1]),
-                       obs=xn[1:])
+                       lqg.conditional_distribution(xn[:, :-1]),
+                       obs=xn[:, 1:])
 
 
 default_prior = prior()
@@ -87,6 +85,7 @@ lifted_loo_model = numpyro.handlers.lift(loo_lqg_model, prior=default_prior)
 
 def correlated_noise_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
     d = x.shape[2] // 2
+    n, T, _ = x.shape
 
     params = {}
     for name, default in get_model_params(model_type).items():
@@ -99,9 +98,9 @@ def correlated_noise_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_
     cor = numpyro.deterministic("cor", (L @ L.T)[1, 0])
     sigma = numpyro.sample("sigma", dist.HalfCauchy(jnp.ones(d) * 50.))
 
-    lqg = model_type(process_noise=process_noise, dt=dt, covar=jnp.diag(sigma) @ L, **params)
+    lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, covar=jnp.diag(sigma) @ L, **params)
 
     if x is not None:
         # numpyro.sample("x0", dist.MultivariateNormal(jnp.zeros(lqg.A.shape[0]), V), obs=x[:, 0])
-        numpyro.sample("x", lqg.conditional_distribution(x[:-1]),
-                       obs=x[1:])
+        numpyro.sample("x", lqg.conditional_distribution(x[:, :-1]),
+                       obs=x[:, 1:])

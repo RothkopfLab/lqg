@@ -1,6 +1,6 @@
 from jax import random
 
-from lqg.tracking import BoundedActor, IdealObserver, SubjectiveActor
+from lqg.tracking import IdealObserver, SubjectiveActor
 
 
 def test_kalman_infer_shapes():

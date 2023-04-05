@@ -7,12 +7,12 @@ from lqg.infer import infer
 
 if __name__ == '__main__':
     # setup model and simulate data
-    model = BoundedActor(sigma=15., prop_noise=5., motor_noise=0.5, c=0.5)
-    x = model.simulate(random.PRNGKey(123), n=20, T=500)
+    model = BoundedActor(sigma=15., prop_noise=5., motor_noise=0.5, c=0.5, T=500)
+    x = model.simulate(random.PRNGKey(123), n=20)
 
     # visualize trajectories
-    plt.plot(x[:, 0, 0])
-    plt.plot(x[:, 0, 1])
+    plt.plot(x[0, :, 0])
+    plt.plot(x[0, :, 1])
     plt.xlabel("time")
     plt.ylabel("position")
     plt.show()
