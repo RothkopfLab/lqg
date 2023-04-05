@@ -208,3 +208,45 @@ class System:
 
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, :, d:, d:])
+
+
+def Dynamics(A, B, F, V, W, T=1000):
+    xdim = A.shape[0]
+    udim = B.shape[1]
+
+    A = jnp.stack((A,) * T)
+    B = jnp.stack((B,) * T)
+    F = jnp.stack((F,) * T)
+    V = jnp.stack((V,) * T)
+    W = jnp.stack((W,) * T)
+    Q = jnp.zeros((T, xdim, xdim))
+    R = jnp.zeros((T, udim, udim))
+
+    return LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
+
+
+def Actor(A, B, F, V, W, Q, R, T=1000):
+    A = jnp.stack((A,) * T)
+    B = jnp.stack((B,) * T)
+    F = jnp.stack((F,) * T)
+    V = jnp.stack((V,) * T)
+    W = jnp.stack((W,) * T)
+    Q = jnp.stack((Q,) * T)
+    R = jnp.stack((R,) * T)
+
+    return LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
+
+
+class LQG(System):
+    def __init__(self, A, B, F, V, W, Q, R, T=1000):
+        A = jnp.stack((A,) * T)
+        B = jnp.stack((B,) * T)
+        F = jnp.stack((F,) * T)
+        V = jnp.stack((V,) * T)
+        W = jnp.stack((W,) * T)
+        Q = jnp.stack((Q,) * T)
+        R = jnp.stack((R,) * T)
+
+        dynamics = LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
+        actor = LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
+        super().__init__(actor=actor, dynamics=dynamics)
