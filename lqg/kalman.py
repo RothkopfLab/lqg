@@ -92,8 +92,7 @@ class KalmanFilter:
             return jnp.hstack([x[..., ::2], x[..., 1::2]])
 
         # simulate n trials
-        x = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0),
-                 out_axes=1)(random.split(rng_key, num=n))
+        x = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0))(random.split(rng_key, num=n))
 
         return x
 

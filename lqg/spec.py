@@ -23,6 +23,7 @@ class LQGSpec:
                  Cu: jnp.ndarray = None,
                  D: jnp.ndarray = None
                  ):
+
         T = Q.shape[0]
         state_dim = Q.shape[1]
         action_dim = R.shape[1]

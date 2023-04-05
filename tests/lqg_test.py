@@ -34,7 +34,7 @@ def test_kalman_simulate():
     x = kf.simulate(random.PRNGKey(0), x0=jnp.zeros(1), n=10)
 
     # simply check that it ran through
-    assert x.shape == (1000, 10, 2)
+    assert x.shape == (10, T, 2)
 
 
 def test_lqg_simulate():
@@ -74,7 +74,7 @@ def test_lqg_simulate():
     x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(2), n=10)
 
     # simply check that it ran through
-    assert x.shape == (1000, 10, 2)
+    assert x.shape == (10, T, 2)
 
 
 def test_simulate_subjective():

@@ -124,63 +124,72 @@ class System:
                     u)
 
         # simulate n trials
-        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0),
-                              out_axes=1)(random.split(rng_key, num=n))
+        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0))(random.split(rng_key, num=n))
 
         if return_all:
             return x, x_hat, y, u
         else:
             return x
 
-    def conditional_moments(self, x, mu0=None):
+    def conditional_moments(self, x):
         """ Conditional distribution p(x | theta)
 
-                Args:
-                    self: LQG
-                    x: time series of shape T (time steps), n (trials), d (dimensionality)
+        Args:
+            self: LQG
+            x: time series of shape T (time steps), n (trials), d (dimensionality)
 
-                Returns:
-                    numpyro.distributions.MultivariateNormal
-                """
-        T, n, d = x.shape
+        Returns:
+            numpyro.distributions.MultivariateNormal
+        """
+        T, obs_dim = x.shape
+        dim = self.dynamics.A.shape[1]
 
         # compute control and estimator gains
-        L = self.actor.L(T)
-        K = self.actor.K(T)
+        gains = lqr.backward(self.actor)
+        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T)
 
         # set up joint dynamical system for state and belief
         # p(x_t, xhat_t | x_{t-1}, xhat_{t-1})
-        F = jnp.vstack(
-            [jnp.hstack([self.dynamics.A,
-                         -self.dynamics.B @ L]),
-             jnp.hstack([K @ self.dynamics.C @ self.dynamics.A,
-                         self.actor.A - self.actor.B @ L - K @ self.actor.C @ self.actor.A])])
 
-        G = jnp.vstack([jnp.hstack([self.dynamics.V, jnp.zeros_like(self.dynamics.C.T)]),
-                        jnp.hstack([K @ self.dynamics.C @ self.dynamics.V, K @ self.dynamics.W])])
+        # joint dynamics
+        F = jnp.concatenate([
+            jnp.concatenate([self.dynamics.A,
+                             self.dynamics.B @ gains.L], axis=-1),
+            jnp.concatenate([K @ self.dynamics.F,
+                             self.actor.A + self.actor.B @ gains.L - K @ self.actor.F], axis=-1)],
+            axis=-2)
+
+        # joint noise covariance Cholesky factor
+        G = jnp.concatenate([
+            jnp.concatenate([self.dynamics.V,
+                             jnp.zeros_like(self.dynamics.F)], axis=-1),
+            jnp.concatenate([jnp.zeros_like(self.actor.A), K @ self.dynamics.W], axis=-1)],
+            axis=-2)
 
         # initialize p(x_t, xhat_t | x_{1:t-1})
-        mu = jnp.zeros((n, self.dynamics.A.shape[0] + self.actor.A.shape[0])) if mu0 is None else mu0
-        Sigma = G @ G.T
+        # TODO: initialization should not always be zero for the unobserved dims
+        mu = jnp.hstack([x[0], jnp.zeros(dim * 2 - obs_dim)])
+        Sigma = G[0] @ G[0].T
 
-        def f(carry, xt):
+        def scan_fn(carry, step):
             mu, Sigma = carry
+            F, G, x = step
 
-            # condition on observed state x_t
-            mu = mu @ F.T + (xt - mu[:, :d]) @ jnp.linalg.inv(Sigma[:d, :d]).T @ (F @ Sigma)[:, :d].T
+            # conditioning and marginalizing
+            mu = F @ mu + (F @ Sigma)[:, :obs_dim] @ jnp.linalg.solve(Sigma[:obs_dim, :obs_dim], x - mu[:obs_dim])
 
-            Sigma = F @ Sigma @ F.T + G @ G.T - (F @ Sigma)[:, :d] @ jnp.linalg.inv(Sigma[:d, :d]) @ (Sigma @ F.T)[:d,
-                                                                                                     :]
+            Sigma = F @ Sigma @ F.T + G @ G.T - (F @ Sigma)[:, :obs_dim] @ jnp.linalg.solve(Sigma[:obs_dim, :obs_dim],
+                                                                                            (Sigma @ F.T)[:obs_dim, :])
             return (mu, Sigma), (mu, Sigma)
 
-        _, (mu, Sigma) = scan(f, (mu, Sigma), x)
+        _, (mu, Sigma) = scan(scan_fn, (mu, Sigma), (F, G, x))
         return mu, Sigma
 
     def conditional_distribution(self, x):
         T, n, d = x.shape
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
-        mu, Sigma = self.conditional_moments(x)
+        mu, Sigma = vmap(self.conditional_moments)(x)
 
         # marginalize out xhat by using only those entries of mu and Sigma that correspond to x
         return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, jnp.newaxis, :d, :d])
@@ -193,7 +202,7 @@ class System:
         d = self.xdim
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
-        mu, Sigma = self.conditional_moments(x)
+        mu, Sigma = vmap(self.conditional_moments)(x)
 
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, jnp.newaxis, d:, d:])
