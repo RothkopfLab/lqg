@@ -163,7 +163,8 @@ class System:
         G = jnp.concatenate([
             jnp.concatenate([self.dynamics.V,
                              jnp.zeros_like(self.dynamics.F)], axis=-1),
-            jnp.concatenate([jnp.zeros_like(self.actor.A), K @ self.dynamics.W], axis=-1)],
+            jnp.concatenate([jnp.zeros_like(self.actor.A),
+                             K @ self.dynamics.W], axis=-1)],
             axis=-2)
 
         # initialize p(x_t, xhat_t | x_{1:t-1})
@@ -192,7 +193,7 @@ class System:
         mu, Sigma = vmap(self.conditional_moments)(x)
 
         # marginalize out xhat by using only those entries of mu and Sigma that correspond to x
-        return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, jnp.newaxis, :d, :d])
+        return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, :, :d, :d])
 
     def log_likelihood(self, x):
         # log likelihood of the states at time t+1 given all previous states up to time t
@@ -205,4 +206,4 @@ class System:
         mu, Sigma = vmap(self.conditional_moments)(x)
 
         # return those elements of mu and Sigma that correspond to xhat
-        return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, jnp.newaxis, d:, d:])
+        return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, :, d:, d:])

@@ -96,44 +96,57 @@ class KalmanFilter:
 
         return x
 
-    def conditional_distribution(self, x):
-        T, n, d = x.shape
+    def conditional_moments(self, x):
+        T, d = x.shape
         idx = list(range(d))
         swapdim = idx[::2] + idx[1::2]
 
-        V = self.dynamics.V
-        W = self.dynamics.W
+        K = kf.forward(self.dynamics, Sigma0=self.dynamics.V[0] @ self.dynamics.V[0].T)
 
-        K = self.K(T)
+        # joint dynamics
+        F = jnp.concatenate([
+            jnp.concatenate([self.dynamics.A,
+                             jnp.zeros_like(self.dynamics.A)], axis=-1),
+            jnp.concatenate([K @ self.dynamics.F,
+                             self.dynamics.A - K @ self.dynamics.F], axis=-1)],
+            axis=-2)
 
-        F = jnp.vstack(
-            [jnp.hstack([self.dynamics.A, jnp.zeros_like(self.dynamics.A)]),
-             jnp.hstack([K @ self.dynamics.C @ self.dynamics.A,
-                         self.dynamics.A - K @ self.dynamics.C @ self.dynamics.A])])
+        F = F[:, :, swapdim]
+        F = F[:, swapdim, :]
 
-        F = F[:, swapdim]
-        F = F[swapdim, :]
+        # joint noise covariance Cholesky factor
+        G = jnp.concatenate([
+            jnp.concatenate([self.dynamics.V,
+                             jnp.zeros_like(self.dynamics.V)], axis=-1),
+            jnp.concatenate([jnp.zeros_like(self.dynamics.A),
+                             K @ self.dynamics.W], axis=-1)],
+            axis=-2)
 
-        # TODO: this throws errors for the model with velocities..
-        G = jnp.vstack([jnp.hstack([V, jnp.zeros_like(V)]), jnp.hstack([K @ self.dynamics.C @ V, K @ W])])
+        G = G[:, :, swapdim]
+        G = G[:, swapdim, :]
 
-        G = G[:, swapdim]
-        G = G[swapdim, :]
+        mu = x[0]
+        Sigma = G[0] @ G[0].T
 
-        mu = jnp.zeros((n, d))
-        Sigma = G @ G.T
-
-        def f(carry, xt):
+        def scan_fn(carry, step):
             mu, Sigma = carry
+            F, G, x = step
 
-            mu = mu @ F.T + (xt - mu) @ jnp.linalg.inv(Sigma).T @ (F @ Sigma).T
+            # conditioning and marginalizing
+            mu = F @ mu + (F @ Sigma) @ jnp.linalg.solve(Sigma, x - mu)
 
-            Sigma = F @ Sigma @ F.T + G @ G.T - (F @ Sigma) @ jnp.linalg.inv(Sigma) @ (Sigma @ F.T)
+            Sigma = F @ Sigma @ F.T + G @ G.T - (F @ Sigma) @ jnp.linalg.solve(Sigma, Sigma @ F.T)
             return (mu, Sigma), (mu, Sigma)
 
-        _, (mu, Sigma) = scan(f, (mu, Sigma), x)
+        _, (mu, Sigma) = scan(scan_fn, (mu, Sigma), (F, G, x))
 
-        return dist.MultivariateNormal(mu, Sigma[:, jnp.newaxis])
+        return mu, Sigma
+
+    def conditional_distribution(self, x):
+        # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
+        mu, Sigma = vmap(self.conditional_moments)(x)
+
+        return dist.MultivariateNormal(mu, Sigma)
 
     def log_likelihood(self, x):
         return self.conditional_distribution(x[:-1]).log_prob(x[1:])
