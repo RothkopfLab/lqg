@@ -3,23 +3,17 @@ import jax.numpy as jnp
 from jax import random, vmap
 from jax.lax import scan
 
-from lqg.riccati import kalman_gain
-from lqg.model import Dynamics
+from lqg.belief import kf
+from lqg.spec import LQGSpec
 
 
 class KalmanFilter:
-    def __init__(self, dynamics: Dynamics):
+    def __init__(self, dynamics: LQGSpec):
         self.dynamics = dynamics
 
     @property
     def xdim(self):
-        return self.dynamics.A.shape[0] * 2
-
-    def K(self, T):
-        K = kalman_gain(self.dynamics.A, self.dynamics.C,
-                        self.dynamics.V @ self.dynamics.V.T,
-                        self.dynamics.W @ self.dynamics.W.T, T=T)
-        return K
+        return self.dynamics.A.shape[1] * 2
 
     def simulate(self, rng_key, n=1, T=100, x0=None, xhat0=None):
         """ Simulate n trials
@@ -36,7 +30,7 @@ class KalmanFilter:
         """
 
         # compute Kalman gain
-        K = self.K(T)
+        K = kf.forward(self.dynamics, Sigma0=self.dynamics.V[0] @ self.dynamics.V[0].T)
 
         def simulate_trial(rng_key, T=100, x0=None, xhat0=None):
             """ Simulate a single trial
@@ -51,8 +45,8 @@ class KalmanFilter:
                 jnp.array, jnp.array, jnp.array, jnp.array: x (states), x_hat (estimates), y, u
             """
 
-            x0 = jnp.zeros(self.dynamics.A.shape[0]) if x0 is None else x0
-            xhat0 = jnp.zeros(self.dynamics.A.shape[0]) if xhat0 is None else xhat0
+            x0 = jnp.zeros(self.dynamics.A.shape[1]) if x0 is None else x0
+            xhat0 = jnp.zeros(self.dynamics.A.shape[1]) if xhat0 is None else xhat0
 
             # generate standard normal noise terms
             rng_key, subkey = random.split(rng_key)
@@ -63,15 +57,15 @@ class KalmanFilter:
             def loop(carry, t):
                 x, x_hat = carry
 
-                # apply dynamics
-                x = self.dynamics.A @ x + self.dynamics.V @ epsilon[t]
-
                 # generate observation
-                y = self.dynamics.C @ x + self.dynamics.W @ eta[t]
+                y = self.dynamics.F[t] @ x + self.dynamics.W[t] @ eta[t]
 
                 # update agent's belief
-                x_pred = self.dynamics.A @ x_hat
-                x_hat = x_pred + K @ (y - self.dynamics.C @ x_pred)
+                x_pred = self.dynamics.A[t] @ x_hat
+                x_hat = x_pred + K[t] @ (y - self.dynamics.F[t] @ x_pred)
+
+                # apply dynamics
+                x = self.dynamics.A[t] @ x + self.dynamics.V[t] @ epsilon[t]
 
                 return (x, x_hat), (x, x_hat, y)
 

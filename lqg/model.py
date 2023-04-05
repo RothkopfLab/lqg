@@ -1,40 +1,15 @@
-from dataclasses import dataclass
 import jax.numpy as jnp
 import numpyro.distributions as dist
 from jax import vmap, random
 from jax.lax import scan
 
-from lqg.riccati import kalman_gain, control_law
-
-
-@dataclass
-class Dynamics:
-    A: jnp.array
-    B: jnp.array
-    C: jnp.array
-    V: jnp.array
-    W: jnp.array
-
-
-@dataclass
-class Actor:
-    A: jnp.array
-    B: jnp.array
-    C: jnp.array
-    V: jnp.array
-    W: jnp.array
-    Q: jnp.array
-    R: jnp.array
-
-    def L(self, T):
-        return control_law(self.A, self.B, self.Q, self.R, T=T)
-
-    def K(self, T):
-        return kalman_gain(self.A, self.C, self.V @ self.V.T, self.W @ self.W.T, T=T)
+from lqg.spec import LQGSpec
+from lqg.control import lqr
+from lqg.belief import kf
 
 
 class System:
-    def __init__(self, actor: Actor, dynamics: Dynamics):
+    def __init__(self, actor: LQGSpec, dynamics: LQGSpec):
         self.actor = actor
         self.dynamics = dynamics
 
@@ -45,7 +20,7 @@ class System:
         Returns:
             int: dimensionality of state
         """
-        return self.dynamics.A.shape[0]
+        return self.dynamics.A.shape[1]
 
     @property
     def ydim(self):
@@ -54,7 +29,7 @@ class System:
         Returns:
             int: dimensionality of observation
         """
-        return self.dynamics.C.shape[0]
+        return self.dynamics.F.shape[1]
 
     @property
     def bdim(self):
@@ -63,7 +38,7 @@ class System:
         Returns:
             int: dimensionality of belief
         """
-        return self.actor.A.shape[0]
+        return self.actor.A.shape[1]
 
     @property
     def udim(self):
@@ -72,7 +47,7 @@ class System:
         Returns:
             int: dimensionality of action
         """
-        return self.dynamics.B.shape[1]
+        return self.dynamics.B.shape[2]
 
     def simulate(self, rng_key, n=1, T=100, x0=None, xhat0=None, return_all=False):
         """ Simulate n trials
@@ -88,8 +63,9 @@ class System:
         Returns:
             jnp.array (T, n, d)
         """
-        L = self.actor.L(T=T)
-        K = self.actor.K(T=T)
+
+        gains = lqr.backward(self.actor)
+        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T)
 
         def simulate_trial(rng_key, T=100, x0=None, xhat0=None):
             """ Simulate a single trial
@@ -116,25 +92,27 @@ class System:
             def loop(carry, t):
                 x, x_hat = carry
 
-                # compute control based on agent's current belief
-                u = - L @ x_hat
-
-                # apply dynamics
-                x = self.dynamics.A @ x + self.dynamics.B @ u + self.dynamics.V @ epsilon[t]
-
                 # generate observation
-                y = self.dynamics.C @ x + self.dynamics.W @ eta[t]
+                y = self.dynamics.F[t] @ x + self.dynamics.W[t] @ eta[t]
 
                 # update agent's belief
-                x_pred = self.actor.A @ x_hat + self.actor.B @ u
-                x_hat = x_pred + K @ (y - self.actor.C @ x_pred)
+                x_pred = self.actor.A[t] @ x_hat + self.actor.B[t] @ (gains.L[t] @ x_hat + gains.l[t])
+                x_hat = x_pred + K[t] @ (y - self.actor.F[t] @ x_hat)
+
+                # compute control based on agent's current belief
+                u = gains.L[t] @ x_hat + gains.l[t]
+
+                # apply dynamics
+                x = self.dynamics.A[t] @ x + self.dynamics.B[t] @ u + self.dynamics.V[t] @ epsilon[t]
 
                 return (x, x_hat), (x, x_hat, y, u)
 
             _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(1, T))
 
-            return jnp.vstack([x0, x]), jnp.vstack([xhat0, x_hat]), \
-                   jnp.vstack([self.dynamics.C @ x0 + self.dynamics.W @ eta[0], y]), u
+            return (jnp.vstack([x0, x]),
+                    jnp.vstack([xhat0, x_hat]),
+                    jnp.vstack([y, self.dynamics.F[-1] @ x[-1] + self.dynamics.W[-1] @ eta[-1]]),
+                    u)
 
         # simulate n trials
         x, x_hat, y, u = vmap(lambda key: simulate_trial(key, T=T, x0=x0, xhat0=xhat0),

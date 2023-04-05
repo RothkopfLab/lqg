@@ -1,23 +1,22 @@
 from jax import numpy as jnp
 
 from lqg.kalman import KalmanFilter
-from lqg.model import Dynamics
+from lqg.spec import LQGSpec
 
 
-class TrackingFilter(KalmanFilter):
-    def __init__(self, dim=1, process_noise=1., sigma=6., dt=1. / 60.):
+class IdealObserver(KalmanFilter):
+    def __init__(self, dim=1, process_noise=1., sigma=6., dt=1. / 60., T=1000):
         A = jnp.eye(dim)
-        C = jnp.eye(dim)
+        F = jnp.eye(dim)
         V = jnp.eye(dim) * process_noise
         W = jnp.eye(dim) * sigma
 
-        super().__init__(Dynamics(A, None, C, V, W))
+        A = jnp.stack((A,) * T)
+        B = jnp.zeros((T, dim, dim))
+        F = jnp.stack((F,) * T)
+        V = jnp.stack((V,) * T)
+        W = jnp.stack((W,) * T)
+        Q = jnp.zeros((T, dim, dim))
+        R = jnp.zeros((T, dim, dim))
 
-
-class TwoDimTrackingFilter(KalmanFilter):
-    def __init__(self, process_noise=1., sigma_v=6., sigma_h=6., dt=1. / 60.):
-        A = jnp.eye(2)
-        C = jnp.eye(2)
-        V = jnp.eye(2) * process_noise
-        W = jnp.diag(jnp.array([sigma_h, sigma_v]))
-        super().__init__(Dynamics(A, None, C, V, W))
+        super().__init__(LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R))
