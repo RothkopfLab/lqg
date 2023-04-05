@@ -30,7 +30,7 @@ python -m pip install -e .
 - [`notebooks/02-Data.ipynb`](https://github.com/RothkopfLab/lqg/blob/main/notebooks/02-Data.ipynb) fits the ideal observer and bounded actor model to the [data](https://github.com/kbonnen/BonnenEtAl2015_KalmanFilterCode) from [Bonnen et al. (2015)](https://jov.arvojournals.org/article.aspx?articleid=2301260) to reproduce Fig. 4A from our paper.
 
 ## Citation
-If you use our method in your research, please cite our paper:
+If you use our method or code in your research, please cite our paper:
 
 ```
 @article{straub2022putting,
