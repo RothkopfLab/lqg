@@ -116,7 +116,7 @@ class System:
 
                 return (x, x_hat), (x, x_hat, y, u)
 
-            _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(1, self.T))
+            _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(self.T))
 
             return (jnp.vstack([x0, x]),
                     jnp.vstack([xhat0, x_hat]),
