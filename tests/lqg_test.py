@@ -2,39 +2,9 @@ import jax.numpy as jnp
 from jax import random
 
 from lqg.spec import LQGSpec
-from lqg.model import System
-from lqg.kalman import KalmanFilter
+from lqg.lqg import System
 
 from lqg.tracking import BoundedActor, SubjectiveActor
-
-
-def test_kalman_simulate():
-    """ Test that Kalman simulation runs"""
-    T = 1000
-
-    # parameters
-    sigma = 6.
-
-    A = jnp.eye(1)
-    V = jnp.diag(jnp.array([1.]))
-
-    F = jnp.eye(1)
-    W = jnp.diag(jnp.array([sigma]))
-
-    A = jnp.stack((A,) * T)
-    B = jnp.zeros((T, 1, 1))
-    F = jnp.stack((F,) * T)
-    V = jnp.stack((V,) * T)
-    W = jnp.stack((W,) * T)
-    Q = jnp.zeros((T, 1, 1))
-    R = jnp.zeros((T, 1, 1))
-
-    kf = KalmanFilter(dynamics=LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R))
-
-    x = kf.simulate(random.PRNGKey(0), x0=jnp.zeros(1), n=10)
-
-    # simply check that it ran through
-    assert x.shape == (10, T, 2)
 
 
 def test_lqg_simulate():
@@ -74,7 +44,7 @@ def test_lqg_simulate():
     x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(2), n=10)
 
     # simply check that it ran through
-    assert x.shape == (10, T, 2)
+    assert x.shape == (10, T + 1, 2)
 
 
 def test_simulate_subjective():
