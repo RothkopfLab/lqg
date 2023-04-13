@@ -8,15 +8,13 @@ This repository contains the official [JAX](https://github.com/google/jax) imple
 > [Straub, D., & Rothkopf, C. A. (2022). Putting perception into action with inverse optimal control for continuous psychophysics. eLife, 11, e76635.](https://elifesciences.org/articles/76635)
 
 ## Installation
-The package can be installed via `pip`
+The package should be installed by cloning the repository to get the most recent version and installing locally with a virtual environment.
+Make sure to activate the `refactor` branch before you get started.
 
 ```bash
-python -m pip install lqg
-```
-
-although I recommend cloning the repository to get the most recent version and installing locally with a virtual environment
-
-```bash
+git clone git@github.com:dominikstrb/lqg.git
+cd lqg
+git checkout refactor
 python -m venv env
 source env/bin/activate
 python -m pip install -e .
