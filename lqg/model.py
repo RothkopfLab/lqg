@@ -58,7 +58,7 @@ class System:
         """
         return self.dynamics.B.shape[2]
 
-    def simulate(self, rng_key, n=1, x0=None, xhat0=None, return_all=False):
+    def simulate(self, rng_key, n=1, x0=None, xhat0=None, Sigma0=None, return_all=False):
         """ Simulate n trials
 
         Args:
@@ -73,8 +73,10 @@ class System:
             jnp.array (T, n, d)
         """
 
+        Sigma0 = self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0
+
         gains = lqr.backward(self.actor)
-        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T)
+        K = kf.forward(self.actor, Sigma0=Sigma0)
 
         def simulate_trial(rng_key, x0=None, xhat0=None):
             """ Simulate a single trial

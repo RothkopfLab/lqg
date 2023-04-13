@@ -48,18 +48,9 @@ class BoundedActor(DimModel):
                          motor_noise=motor_noise,
                          sigma=sigma, prop_noise=prop_noise, c=c, dt=dt, T=T)
 
-
-class NoiseFreeModel(DimModel):
-    def __init__(self, process_noise=1.0,
-                 sigma=6.0, prop_noise=6.0, c=1.0, dt=1. / 60, T=1000):
-        super().__init__(dim=1, process_noise=process_noise,
-                         motor_noise=1e-4,
-                         sigma=sigma, prop_noise=prop_noise, c=c, dt=dt, T=T)
-
-
 class OptimalActor(DimModel):
     def __init__(self, process_noise=1.0, motor_noise=0.5,
                  sigma=6.0, prop_noise=6.0, dt=1. / 60, T=1000):
         super().__init__(dim=1, process_noise=process_noise,
                          motor_noise=motor_noise,
-                         sigma=sigma, prop_noise=prop_noise, c=0, dt=dt, T=T)
+                         sigma=sigma, prop_noise=prop_noise, c=0., dt=dt, T=T)
