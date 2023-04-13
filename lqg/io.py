@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import scipy.io as spio
 
@@ -41,7 +42,7 @@ def _todict(matobj):
     return dict
 
 
-def load_tracking_data(delay=12, clip=120, subtract_mean=True):
+def load_tracking_data(delay=12, clip=120, subtract_mean=True, data_path="data/"):
     """ Load tracking data from Bonnen et al. (2015)
 
     Args:
@@ -57,7 +58,7 @@ def load_tracking_data(delay=12, clip=120, subtract_mean=True):
     arcscale = 1.32
 
     # load matlab file
-    mat = loadmat("../data/data.mat")
+    mat = loadmat(os.path.join(data_path, "data.mat"))
 
     # get target blob widths
     sigma = (mat["sigma"] * arcscale).round()
