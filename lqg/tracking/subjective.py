@@ -1,7 +1,7 @@
 from jax import numpy as jnp
 
 from lqg.spec import LQGSpec
-from lqg.model import System
+from lqg.lqg import System
 
 class SubjectiveActor(System):
     def __init__(self, process_noise=1., c=0.5, motor_noise=0.5, subj_noise=.1, subj_vel_noise=10.,

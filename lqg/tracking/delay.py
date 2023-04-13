@@ -1,7 +1,7 @@
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from lqg.model import System
+from lqg.lqg import System
 from lqg.tracking.subjective import SubjectiveVelocityModel
 
 
