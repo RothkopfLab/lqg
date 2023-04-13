@@ -9,6 +9,7 @@ def prior():
     return {"c": dist.HalfNormal(2.),
             "sigma": dist.HalfNormal(50.),
             "motor_noise": dist.HalfNormal(1.),
+            "signal_dep_noise": dist.HalfNormal(1.),
             "prop_noise": dist.HalfNormal(12.5),
             "vel_noise": dist.HalfCauchy(10.),
             "subj_noise": dist.HalfNormal(1.),

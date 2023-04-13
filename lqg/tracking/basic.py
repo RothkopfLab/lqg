@@ -1,12 +1,12 @@
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from lqg.model import System
+from lqg.lqg import System
 from lqg.spec import LQGSpec
 
 
-class DimModel(System):
-    def __init__(self, dim=3, process_noise=1.0, motor_noise=0.5,
+class TrackingTask(System):
+    def __init__(self, dim=1, process_noise=1.0, motor_noise=0.5,
                  sigma=6.0, prop_noise=6.0, c=1.0, dt=1. / 60., T=1000):
         self.dim = dim
         self.process_noise = process_noise
@@ -35,20 +35,20 @@ class DimModel(System):
         Q = jnp.stack((Q,) * T)
         R = jnp.stack((R,) * T)
 
-        dyn = LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
-        act = LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
+        spec = LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
 
-        super().__init__(actor=act, dynamics=dyn)
+        super().__init__(actor=spec, dynamics=spec)
 
 
-class BoundedActor(DimModel):
+class BoundedActor(TrackingTask):
     def __init__(self, process_noise=1.0, motor_noise=0.5,
                  sigma=6.0, prop_noise=6.0, c=1.0, dt=1. / 60, T=1000):
         super().__init__(dim=1, process_noise=process_noise,
                          motor_noise=motor_noise,
                          sigma=sigma, prop_noise=prop_noise, c=c, dt=dt, T=T)
 
-class OptimalActor(DimModel):
+
+class OptimalActor(TrackingTask):
     def __init__(self, process_noise=1.0, motor_noise=0.5,
                  sigma=6.0, prop_noise=6.0, dt=1. / 60, T=1000):
         super().__init__(dim=1, process_noise=process_noise,
