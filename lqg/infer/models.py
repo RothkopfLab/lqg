@@ -29,7 +29,7 @@ def lqg_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
 
     lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, **params)
 
-    numpyro.sample("x", lqg.conditional_distribution(x[:, :-1]), obs=x[:, 1:])
+    numpyro.sample("x", lqg.conditional_distribution(x[:, :-1]).to_event(1), obs=x[:, 1:])
 
 
 def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_params):
@@ -51,7 +51,7 @@ def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_param
         lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, sigma=sigma_n, **params)
 
         numpyro.sample(f"x_{n}",
-                       lqg.conditional_distribution(xn[:, :-1]),
+                       lqg.conditional_distribution(xn[:, :-1]).to_event(1),
                        obs=xn[:, 1:])
 
 
@@ -80,8 +80,6 @@ default_prior = prior()
 # apply priors
 lifted_model = numpyro.handlers.lift(lqg_model, prior=default_prior)
 lifted_common_model = numpyro.handlers.lift(common_lqg_model, prior=default_prior)
-lifted_loo_model = numpyro.handlers.lift(loo_lqg_model, prior=default_prior)
-
 
 def correlated_noise_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
     d = x.shape[2] // 2

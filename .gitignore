@@ -1,5 +1,6 @@
-# Cluster scripts
+# Cluster scripts and results
 hhlr-scripts/
+results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
