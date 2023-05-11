@@ -4,6 +4,7 @@ from jax.scipy import linalg
 
 from lqg.glqg import SignalDependentNoiseSystem
 from lqg.spec import LQGSpec
+from lqg.utils import time_stack
 
 
 def glqg_tracking_matrices(process_noise, sigma, sigma_p, sigma_m, c, dt=1. / 60.):
@@ -58,14 +59,14 @@ class SignalDependentNoiseTrackingTask(SignalDependentNoiseSystem):
             [B @ linalg.block_diag(*(signal_dep_noise * int(i == j) * C for i in range(dim))) for j in range(dim)],
             axis=-1)
 
-        spec = LQGSpec(A=jnp.stack([A] * T),
-                       B=jnp.stack([B] * T),
-                       V=jnp.stack([V] * T),
-                       F=jnp.stack([F] * T),
-                       W=jnp.stack([W] * T),
-                       Cu=jnp.stack(T * (Cu,)),
-                       Q=jnp.stack([Q] * T),
-                       R=jnp.stack([R] * T))
+        spec = LQGSpec(A=time_stack(A, T),
+                       B=time_stack(B, T),
+                       F=time_stack(F, T),
+                       V=time_stack(V, T),
+                       W=time_stack(W, T),
+                       Cu=time_stack(Cu, T),
+                       Q=time_stack(Q, T),
+                       R=time_stack(R, T))
 
         super().__init__(actor=spec, dynamics=spec)
 
