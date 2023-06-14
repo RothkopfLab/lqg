@@ -1,7 +1,10 @@
 import argparse
+import numpyro
 from numpyro.infer import MCMC, NUTS
 from jax import random
 import arviz as az
+
+numpyro.set_host_device_count(4)
 
 from lqg.io import load_tracking_data
 from lqg.infer.models import lifted_common_model as common_lqg_model
@@ -18,7 +21,7 @@ def parse_args():
                         help="Number of samples drawn by NUTS")
     parser.add_argument("--nburnin", type=int, default=2_500,
                         help="Number of burn-in samples.")
-    parser.add_argument("--nchain", type=int, default=1)
+    parser.add_argument("--nchain", type=int, default=4)
     parser.add_argument("--model", type=str, default="BoundedActor",
                         help="Model type")
     parser.add_argument("--seed", type=int, default=2,
@@ -39,4 +42,4 @@ if __name__ == '__main__':
     mcmc.run(random.PRNGKey(args.seed), data, getattr(tracking, args.model))
 
     inference_data = az.convert_to_inference_data(mcmc)
-    inference_data.to_netcdf(f"results/{args.model}-{args.seed}.nc")
+    inference_data.to_netcdf(f"data/processed/{args.model}-{args.seed}.nc")
