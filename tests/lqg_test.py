@@ -1,8 +1,7 @@
 import jax.numpy as jnp
 from jax import random
 
-from lqg.spec import LQGSpec
-from lqg.lqg import System
+from lqg.lqg import LQG
 
 from lqg.tracking import BoundedActor, SubjectiveActor
 
@@ -30,21 +29,12 @@ def test_lqg_simulate():
 
     R = jnp.eye(1) * action_cost
 
-    A = jnp.stack((A,) * T)
-    B = jnp.stack((B,) * T)
-    F = jnp.stack((F,) * T)
-    V = jnp.stack((V,) * T)
-    W = jnp.stack((W,) * T)
-    Q = jnp.stack((Q,) * T)
-    R = jnp.stack((R,) * T)
-
-    lqg = System(actor=LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R),
-                 dynamics=LQGSpec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R))
+    lqg = LQG(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
 
     x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(2), n=10)
 
     # simply check that it ran through
-    assert x.shape == (10, T + 1, 2)
+    assert x.shape == (10, T, 2)
 
 
 def test_simulate_subjective():
