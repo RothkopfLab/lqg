@@ -1,8 +1,7 @@
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from lqg.lqg import System
-from lqg.utils import time_stack_spec
+from lqg.lqg import System, Actor
 
 
 class TrackingTask(System):
@@ -27,7 +26,7 @@ class TrackingTask(System):
         Q = linalg.block_diag(*[jnp.array([[1., -1.], [-1., 1.]])] * dim)
         R = jnp.eye(B.shape[1]) * c
 
-        spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
+        spec = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
         super().__init__(actor=spec, dynamics=spec)
 

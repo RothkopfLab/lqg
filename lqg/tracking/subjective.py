@@ -1,8 +1,6 @@
 from jax import numpy as jnp
 
-from lqg.spec import LQGSpec
-from lqg.lqg import System
-from lqg.utils import time_stack_spec
+from lqg.lqg import System, Actor, Dynamics
 
 
 class SubjectiveActor(System):
@@ -15,10 +13,7 @@ class SubjectiveActor(System):
         V = jnp.diag(jnp.array([process_noise, motor_noise]))
         W = jnp.diag(jnp.array([sigma, prop_noise]))
 
-        Q = jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]])
-        R = jnp.eye(B.shape[1]) * c
-
-        dyn = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
+        dyn = Dynamics(A=A, B=B, F=F, V=V, W=W, T=T)
 
         A = jnp.array([[1., 0., dt], [0., 1., 0.], [0., 0., 1.]])
         B = jnp.array([[0.], [10. * dt], [0.]])
@@ -27,6 +22,9 @@ class SubjectiveActor(System):
 
         V = jnp.diag(jnp.array([subj_noise, motor_noise, subj_vel_noise]))
 
-        act = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
+        Q = jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]])
+        R = jnp.eye(B.shape[1]) * c
+
+        act = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
         super().__init__(actor=act, dynamics=dyn)

@@ -59,14 +59,14 @@ class SignalDependentNoiseTrackingTask(SignalDependentNoiseSystem):
             [B @ linalg.block_diag(*(signal_dep_noise * int(i == j) * C for i in range(dim))) for j in range(dim)],
             axis=-1)
 
-        spec = LQGSpec(A=time_stack(A, T),
-                       B=time_stack(B, T),
-                       F=time_stack(F, T),
-                       V=time_stack(V, T),
-                       W=time_stack(W, T),
-                       Cu=time_stack(Cu, T),
-                       Q=time_stack(Q, T),
-                       R=time_stack(R, T))
+        spec = LQGSpec(A=time_stack(A, T-1),
+                       B=time_stack(B, T-1),
+                       F=time_stack(F, T-1),
+                       V=time_stack(V, T-1),
+                       W=time_stack(W, T-1),
+                       Cu=time_stack(Cu, T-1),
+                       Q=time_stack(Q, T-1),
+                       R=time_stack(R, T-1))
 
         super().__init__(actor=spec, dynamics=spec)
 

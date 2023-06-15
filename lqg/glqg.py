@@ -169,5 +169,5 @@ class SignalDependentNoiseSystem(System):
 
             return (mu, Sigma), (mu, Sigma)
 
-        _, (mu, Sigma) = scan(scan_fn, (mu, Sigma), jnp.arange(T))
+        _, (mu, Sigma) = scan(scan_fn, (mu, Sigma), jnp.arange(T - 1))
         return mu, Sigma
