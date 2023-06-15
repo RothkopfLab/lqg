@@ -166,15 +166,15 @@ class System:
         # joint noise covariance Cholesky factor
         G = jnp.concatenate([
             jnp.concatenate([self.dynamics.V,
-                             jnp.zeros((T, self.dynamics.A.shape[1], self.dynamics.W.shape[2]))], axis=-1),
-            jnp.concatenate([jnp.zeros((T, self.actor.A.shape[1], self.dynamics.A.shape[2])),
+                             jnp.zeros((self.T, self.dynamics.A.shape[1], self.dynamics.W.shape[2]))], axis=-1),
+            jnp.concatenate([jnp.zeros((self.T, self.actor.A.shape[1], self.dynamics.A.shape[2])),
                              K @ self.dynamics.W], axis=-1)],
             axis=-2)
 
         # initialize p(x_t, xhat_t | x_{1:t-1})
         # TODO: initialization should not always be zero for the unobserved dims
-        mu = jnp.hstack([x[0], jnp.zeros(xdim - obs_dim + bdim)])
-        Sigma = G[0] @ G[0].T
+        mu0 = jnp.hstack([x[0], jnp.zeros(xdim - obs_dim + bdim)])
+        Sigma0 = G[0] @ G[0].T
 
         def scan_fn(carry, step):
             mu, Sigma = carry
@@ -187,7 +187,8 @@ class System:
                                                                                             (Sigma @ F.T)[:obs_dim, :])
             return (mu, Sigma), (mu, Sigma)
 
-        _, (mu, Sigma) = scan(scan_fn, (mu, Sigma), (F, G, x))
+        _, (mu, Sigma) = scan(scan_fn, (mu0, Sigma0), (F, G, x[:-1]))
+        # return jnp.vstack((mu0, mu)), jnp.vstack((Sigma0[jnp.newaxis], Sigma))
         return mu, Sigma
 
     def conditional_distribution(self, x):
@@ -217,15 +218,15 @@ def Dynamics(A, B, F, V, W, T=1000):
     xdim = A.shape[0]
     udim = B.shape[1]
 
-    return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=jnp.zeros((xdim, xdim)), R=jnp.zeros((udim, udim)), T=T)
+    return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=jnp.zeros((xdim, xdim)), R=jnp.zeros((udim, udim)), T=T - 1)
 
 
 def Actor(A, B, F, V, W, Q, R, T=1000):
-    return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
+    return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T - 1)
 
 
 class LQG(System):
     def __init__(self, A, B, F, V, W, Q, R, T=1000):
-        spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
+        spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T - 1)
 
         super().__init__(actor=spec, dynamics=spec)
