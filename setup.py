@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="lqg",
-    version="0.1.8",
+    version="0.1.9",
     author="Dominik Straub",
     author_email="dominik.straub@tu-darmstadt.de",
     description="(Inverse) optimal control for linear quadratic Gaussian systems",
