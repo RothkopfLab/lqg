@@ -1,6 +1,6 @@
 from jax import random
 
-from lqg.tracking import SubjectiveActor, SignalDependentNoiseTrackingTask
+from lqg.tracking import SubjectiveActor, SignalDependentNoiseActor
 
 
 def test_lqg_infer_shapes():
@@ -16,7 +16,7 @@ def test_lqg_infer_shapes():
 def test_glqg_infer_shapes():
     """ Check that GLQG conditional distribution has the correct shapes
     """
-    model = SignalDependentNoiseTrackingTask(T=500)
+    model = SignalDependentNoiseActor(T=500)
 
     x = model.simulate(random.PRNGKey(113), n=20)
 

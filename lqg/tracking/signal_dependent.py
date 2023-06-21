@@ -38,7 +38,7 @@ def swap_dims(d, dim):
     return dims
 
 
-class SignalDependentNoiseTrackingTask(SignalDependentNoiseSystem):
+class SignalDependentNoiseActor(SignalDependentNoiseSystem):
     def __init__(self, dim=1, process_noise=1.0, motor_noise=0.5, signal_dep_noise=0.,
                  sigma=6.0, prop_noise=6.0, c=1.0, dt=1. / 60., T=1000):
         system = glqg_tracking_matrices(process_noise=process_noise, sigma=sigma, sigma_p=prop_noise,
@@ -74,7 +74,7 @@ class SignalDependentNoiseTrackingTask(SignalDependentNoiseSystem):
 if __name__ == '__main__':
     from jax import random
 
-    model = SignalDependentNoiseTrackingTask()
+    model = SignalDependentNoiseActor()
 
     x = model.simulate(rng_key=random.PRNGKey(0))
 
