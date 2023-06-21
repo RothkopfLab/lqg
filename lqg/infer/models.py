@@ -48,32 +48,11 @@ def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_param
         # observation noise
         sigma_n = numpyro.param(f"sigma_{n}", jnp.array(1.), constraint=dist.constraints.positive)
 
-        lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, sigma=sigma_n, **params)
+        lqg = model_type(process_noise=process_noise, dt=dt, T=T, sigma=sigma_n, **params)
 
         numpyro.sample(f"x_{n}",
-                       lqg.conditional_distribution(xn[:, :-1]).to_event(1),
+                       lqg.conditional_distribution(xn).to_event(1),
                        obs=xn[:, 1:])
-
-
-def loo_lqg_model(x, model_type, process_noise, dt=1. / 60., **fixed_params):
-    Nc, N, T, d = x.shape
-
-    params = {}
-    for name, default in get_model_params(model_type).items():
-        if name in fixed_params:
-            params[name] = fixed_params[name]
-        else:
-            params[name] = numpyro.param(name, jnp.array(default), constraint=dist.constraints.positive)
-
-    for n in range(Nc):
-        xn = x[n]
-
-        lqg = model_type(process_noise=process_noise[n], dt=dt, T=T, **params)
-
-        numpyro.sample(f"x_{n}",
-                       lqg.conditional_distribution(xn[:, :-1]),
-                       obs=xn)
-
 
 default_prior = prior()
 
