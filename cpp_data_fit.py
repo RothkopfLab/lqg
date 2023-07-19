@@ -1,6 +1,6 @@
 import argparse
 import numpyro
-from numpyro.infer import MCMC, NUTS
+from numpyro.infer import MCMC, NUTS, init_to_median
 from jax import random
 import arviz as az
 
@@ -15,16 +15,16 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Continuous Psychophysics")
     parser.add_argument("--delay", type=int, default=12,
                         help="Time delay, by which target and mouse position are shifted")
-    parser.add_argument("--clip", type=int, default=120,
+    parser.add_argument("--clip", type=int, default=180,
                         help="Clip the initial n time steps of the data")
-    parser.add_argument("--nsamp", type=int, default=10_000,
+    parser.add_argument("--nsamp", type=int, default=5_000,
                         help="Number of samples drawn by NUTS")
-    parser.add_argument("--nburnin", type=int, default=2_500,
+    parser.add_argument("--nburnin", type=int, default=1_500,
                         help="Number of burn-in samples.")
     parser.add_argument("--nchain", type=int, default=4)
     parser.add_argument("--model", type=str, default="BoundedActor",
                         help="Model type")
-    parser.add_argument("--seed", type=int, default=2,
+    parser.add_argument("--seed", type=int, default=1,
                         help="Seed for NUTS")
     return parser.parse_args()
 
@@ -32,11 +32,11 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    data, bws = load_tracking_data(delay=args.delay, clip=args.clip, subtract_mean=True)
+    data, bws = load_tracking_data(delay=args.delay, clip=args.clip, subtract_mean=False)
 
     print(data.shape)
 
-    nuts_kernel = NUTS(common_lqg_model)
+    nuts_kernel = NUTS(common_lqg_model, init_strategy=init_to_median)
 
     mcmc = MCMC(nuts_kernel, num_warmup=args.nburnin, num_samples=args.nsamp, num_chains=args.nchain)
     mcmc.run(random.PRNGKey(args.seed), data, getattr(tracking, args.model))
