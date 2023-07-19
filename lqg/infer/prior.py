@@ -11,27 +11,14 @@ def prior():
             "motor_noise": dist.HalfNormal(1.),
             "signal_dep_noise": dist.HalfNormal(1.),
             "prop_noise": dist.HalfNormal(12.5),
-            "vel_noise": dist.HalfCauchy(10.),
             "subj_noise": dist.HalfNormal(1.),
             "subj_vel_noise": dist.HalfNormal(2.),
-            "subj_k": dist.Gamma(.01, .01),
-            "subj_lmbd": dist.Gamma(.01, .01),
-            "sigma_v": dist.HalfCauchy(50.),
-            "sigma_h": dist.HalfCauchy(50.),
-            "sigma_z": dist.HalfCauchy(50.),
-            "motor_noise_v": dist.HalfCauchy(1.),
-            "motor_noise_h": dist.HalfCauchy(1.),
-            "prop_noise_v": dist.HalfCauchy(1.),
-            "prop_noise_h": dist.HalfCauchy(1.),
-            "c_v": dist.HalfCauchy(50.),
-            "c_h": dist.HalfCauchy(50.),
             "sigma_0": dist.HalfNormal(50.),
             "sigma_1": dist.HalfNormal(50.),
             "sigma_2": dist.HalfNormal(50.),
             "sigma_3": dist.HalfNormal(50.),
             "sigma_4": dist.HalfNormal(50.),
             "sigma_5": dist.HalfNormal(50.),
-            "sigma_test": dist.Gamma(0.01, 0.01)
             }
 
 

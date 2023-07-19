@@ -4,8 +4,8 @@ from lqg.lqg import System, Actor, Dynamics
 
 
 class SubjectiveActor(System):
-    def __init__(self, process_noise=1., c=0.5, motor_noise=0.5, subj_noise=.1, subj_vel_noise=10.,
-                 sigma=6., prop_noise=3., dt=1. / 60, T=1000):
+    def __init__(self, process_noise=1., c=1., motor_noise=0.5, subj_noise=1., subj_vel_noise=.5,
+                 sigma=6., prop_noise=6., dt=1. / 60, T=1000):
         A = jnp.eye(2)
         B = jnp.array([[0.], [10. * dt]])
         F = jnp.eye(2)

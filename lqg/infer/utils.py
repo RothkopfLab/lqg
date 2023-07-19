@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from jax import random, lax
 from numpyro import optim
-from numpyro.infer import NUTS, MCMC, SVI, Trace_ELBO
+from numpyro.infer import NUTS, MCMC, SVI, Trace_ELBO, init_to_median
 from numpyro.infer.autoguide import AutoBNAFNormal
 from numpyro.infer.reparam import NeuTraReparam
 
@@ -13,7 +13,7 @@ def infer(x, num_samples, num_warmup, model=BoundedActor, numpyro_fn=lqg_model, 
           method="nuts", progress_bar=True, num_chains=1, seed=0, **fixed):
     if method == "nuts":
         # setup kernel
-        nuts_kernel = NUTS(numpyro_fn)
+        nuts_kernel = NUTS(numpyro_fn, init_strategy=init_to_median)
 
     elif method == "neutra":
         # learn normalizing flow
