@@ -1,25 +1,27 @@
 import numpy as np
-import numpyro.handlers
+import numpyro
 from jax import numpy as jnp
 from jax.scipy.stats import norm
 from numpyro import distributions as dist
 
+default_prior = {"c": dist.HalfNormal(2.),
+                 "sigma": dist.HalfNormal(50.),
+                 "motor_noise": dist.HalfNormal(1.),
+                 "signal_dep_noise": dist.HalfNormal(1.),
+                 "prop_noise": dist.HalfNormal(12.5),
+                 "subj_noise": dist.HalfNormal(1.),
+                 "subj_vel_noise": dist.HalfNormal(2.),
+                 "sigma_0": dist.HalfNormal(50.),
+                 "sigma_1": dist.HalfNormal(50.),
+                 "sigma_2": dist.HalfNormal(50.),
+                 "sigma_3": dist.HalfNormal(50.),
+                 "sigma_4": dist.HalfNormal(50.),
+                 "sigma_5": dist.HalfNormal(50.),
+                 }
+
 
 def prior():
-    return {"c": dist.HalfNormal(2.),
-            "sigma": dist.HalfNormal(50.),
-            "motor_noise": dist.HalfNormal(1.),
-            "signal_dep_noise": dist.HalfNormal(1.),
-            "prop_noise": dist.HalfNormal(12.5),
-            "subj_noise": dist.HalfNormal(1.),
-            "subj_vel_noise": dist.HalfNormal(2.),
-            "sigma_0": dist.HalfNormal(50.),
-            "sigma_1": dist.HalfNormal(50.),
-            "sigma_2": dist.HalfNormal(50.),
-            "sigma_3": dist.HalfNormal(50.),
-            "sigma_4": dist.HalfNormal(50.),
-            "sigma_5": dist.HalfNormal(50.),
-            }
+    return default_prior
 
 
 def lognormal_params(mu, sigma):
