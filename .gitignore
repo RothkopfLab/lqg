@@ -1,3 +1,6 @@
+# Package management
+poetry.lock
+
 # Cluster scripts and results
 hhlr-scripts/
 results/
