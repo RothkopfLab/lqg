@@ -1,13 +1,14 @@
 import argparse
 import matplotlib.pyplot as plt
-import arviz as az
-from jax import random
 import numpyro
+from numpyro.infer import NUTS, MCMC, init_to_median
+from jax import random
+import arviz as az
 
 numpyro.set_host_device_count(4)
 
 from lqg import tracking
-from lqg.infer import infer
+from lqg.infer.models import lifted_model
 from lqg.infer.utils import sample_from_prior
 
 
@@ -27,6 +28,7 @@ def parse_args():
     parser.add_argument("--model", type=str, default="BoundedActor",
                         help="Model type (lqg.tracking)")
     parser.add_argument('--plot', action=argparse.BooleanOptionalAction)
+    parser.add_argument('--save', action=argparse.BooleanOptionalAction)
     return parser.parse_args()
 
 
@@ -50,8 +52,11 @@ if __name__ == '__main__':
         plt.ylabel("position")
         plt.show()
 
-    mcmc = infer(x, model=Model,
-                 num_samples=args.nsamp, num_warmup=args.nwarmup, num_chains=args.nchain)
+    nuts_kernel = NUTS(lifted_model, init_strategy=init_to_median)
+
+    mcmc = MCMC(nuts_kernel, num_warmup=args.nwarmup, num_samples=args.nsamp,
+                num_chains=args.nchain)
+    mcmc.run(random.PRNGKey(args.seed), x, Model)
 
     idata = az.convert_to_inference_data(mcmc)
 
@@ -59,7 +64,10 @@ if __name__ == '__main__':
         az.plot_pair(idata)
         plt.show()
 
-    summary = az.summary(idata)
-    for key in params:
-        summary.loc[key, "true"] = params[key]
-    summary.to_csv(f"results/parameter-recovery/{args.model}-{args.seed}.nc")
+    if args.save:
+        summary = az.summary(idata)
+        for key in params:
+            summary.loc[key, "true"] = params[key]
+            summary[key] = params[key]
+        summary["seed"] = args.seed
+        summary.to_csv(f"results/parameter-recovery/{args.model}-{args.seed}.csv")

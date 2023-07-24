@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument("--model", type=str, default="BoundedActor",
                         help="Model type")
     parser.add_argument("--seed", type=int, default=1,
-                        help="Seed for NUTS")
+                        help="Random seed (for NUTS)")
     return parser.parse_args()
 
 
