@@ -14,6 +14,13 @@ matplotlib = ">=3.2.2"
 arviz = ">=0.16.1"
 
 
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
