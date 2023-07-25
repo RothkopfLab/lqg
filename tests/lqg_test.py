@@ -3,7 +3,7 @@ from jax import random
 
 from lqg.lqg import LQG
 
-from lqg.tracking import BoundedActor, SubjectiveActor
+from lqg.tracking import BoundedActor, SubjectiveActor, SignalDependentNoiseActor
 
 
 def test_lqg_simulate():
@@ -39,11 +39,21 @@ def test_lqg_simulate():
 
 def test_simulate_subjective():
     """ Test that subjective model without subjective component is equal to non-subjective model. """
-    bounded_actor = BoundedActor(process_noise=1., sigma=6., c=.1, motor_noise=.5, prop_noise=3., T=500)
-    subjective_actor = SubjectiveActor(process_noise=1., sigma=6., c=.1, motor_noise=.5, prop_noise=3.,
+    bounded_actor = BoundedActor(process_noise=1., sigma_target=6., action_cost=.1, action_variability=.5,
+                                 sigma_cursor=3., T=500)
+    subjective_actor = SubjectiveActor(process_noise=1., sigma_target=6., action_cost=.1, action_variability=.5,
+                                       sigma_cursor=3.,
                                        subj_noise=1., subj_vel_noise=0., T=500)
 
     x_b = bounded_actor.simulate(rng_key=random.PRNGKey(0), n=20)
     x_s = subjective_actor.simulate(rng_key=random.PRNGKey(0), n=20)
 
     assert jnp.allclose(x_b, x_s)
+
+
+def test_simulate_signal_dependent():
+    actor = SignalDependentNoiseActor()
+
+    x = actor.simulate(rng_key=random.PRNGKey(0), n=20)
+
+    assert x.shape == (20, 1000, 5)
