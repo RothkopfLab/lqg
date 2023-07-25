@@ -4,14 +4,14 @@ from lqg.lqg import System, Actor, Dynamics
 
 
 class SubjectiveActor(System):
-    def __init__(self, process_noise=1., c=1., motor_noise=0.5, subj_noise=1., subj_vel_noise=.5,
-                 sigma=6., prop_noise=6., dt=1. / 60, T=1000):
+    def __init__(self, process_noise=1., action_cost=1., action_variability=0.5, subj_noise=1., subj_vel_noise=.5,
+                 sigma_target=6., sigma_cursor=6., dt=1. / 60, T=1000):
         A = jnp.eye(2)
         B = jnp.array([[0.], [10. * dt]])
         F = jnp.eye(2)
 
-        V = jnp.diag(jnp.array([process_noise, motor_noise]))
-        W = jnp.diag(jnp.array([sigma, prop_noise]))
+        V = jnp.diag(jnp.array([process_noise, action_variability]))
+        W = jnp.diag(jnp.array([sigma_target, sigma_cursor]))
 
         dyn = Dynamics(A=A, B=B, F=F, V=V, W=W, T=T)
 
@@ -20,10 +20,10 @@ class SubjectiveActor(System):
         F = jnp.array([[1., 0., 0.],
                        [0., 1., 0.]])
 
-        V = jnp.diag(jnp.array([subj_noise, motor_noise, subj_vel_noise]))
+        V = jnp.diag(jnp.array([subj_noise, action_variability, subj_vel_noise]))
 
         Q = jnp.array([[1., -1., 0.], [-1., 1., 0.], [0., 0., 0.]])
-        R = jnp.eye(B.shape[1]) * c
+        R = jnp.eye(B.shape[1]) * action_cost
 
         act = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
