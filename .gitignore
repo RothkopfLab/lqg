@@ -4,6 +4,7 @@ poetry.lock
 # Cluster scripts and results
 hhlr-scripts/
 results/
+data/processed
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
