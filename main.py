@@ -61,7 +61,7 @@ if __name__ == '__main__':
     idata = az.convert_to_inference_data(mcmc)
 
     if args.plot:
-        az.plot_pair(idata)
+        az.plot_pair(idata, reference_values=params, figsize=(6, 6), kind="hexbin")
         plt.show()
 
     if args.save:
