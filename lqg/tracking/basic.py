@@ -5,8 +5,8 @@ from lqg.lqg import System, Actor
 
 
 class TrackingTask(System):
-    def __init__(self, dim=1, process_noise=1.0, motor_noise=0.5,
-                 sigma=6.0, prop_noise=6.0, c=1.0, dt=1. / 60., T=1000):
+    def __init__(self, dim=1, process_noise=1.0, action_variability=0.5,
+                 sigma_target=6.0, sigma_cursor=6.0, action_cost=1.0, dt=1. / 60., T=1000):
         self.dim = dim
         self.process_noise = process_noise
         # dimensionality
@@ -19,12 +19,12 @@ class TrackingTask(System):
         F = jnp.eye(d)
 
         # noise model
-        V = jnp.diag(jnp.array([process_noise, motor_noise] * dim))
-        W = jnp.diag(jnp.array([sigma, prop_noise] * dim))
+        V = jnp.diag(jnp.array([process_noise, action_variability] * dim))
+        W = jnp.diag(jnp.array([sigma_target, sigma_cursor] * dim))
 
         # cost function
         Q = linalg.block_diag(*[jnp.array([[1., -1.], [-1., 1.]])] * dim)
-        R = jnp.eye(B.shape[1]) * c
+        R = jnp.eye(B.shape[1]) * action_cost
 
         spec = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
@@ -32,16 +32,16 @@ class TrackingTask(System):
 
 
 class BoundedActor(TrackingTask):
-    def __init__(self, process_noise=1.0, motor_noise=0.5,
-                 sigma=6.0, prop_noise=6.0, c=1.0, dt=1. / 60, T=1000):
+    def __init__(self, process_noise=1.0, action_variability=0.5,
+                 sigma_target=6.0, sigma_cursor=6.0, action_cost=1.0, dt=1. / 60, T=1000):
         super().__init__(dim=1, process_noise=process_noise,
-                         motor_noise=motor_noise,
-                         sigma=sigma, prop_noise=prop_noise, c=c, dt=dt, T=T)
+                         action_variability=action_variability,
+                         sigma_target=sigma_target, sigma_cursor=sigma_cursor, action_cost=action_cost, dt=dt, T=T)
 
 
 class OptimalActor(TrackingTask):
-    def __init__(self, process_noise=1.0, motor_noise=0.5,
-                 sigma=6.0, prop_noise=6.0, dt=1. / 60, T=1000):
+    def __init__(self, process_noise=1.0, action_variability=0.5,
+                 sigma_target=6.0, sigma_cursor=6.0, dt=1. / 60, T=1000):
         super().__init__(dim=1, process_noise=process_noise,
-                         motor_noise=motor_noise,
-                         sigma=sigma, prop_noise=prop_noise, c=0., dt=dt, T=T)
+                         action_variability=action_variability,
+                         sigma_target=sigma_target, sigma_cursor=sigma_cursor, action_cost=0., dt=dt, T=T)

@@ -31,11 +31,11 @@ class TemporalDelayModel(System):
 
 
 class DelayedSubjectiveActor(TemporalDelayModel):
-    def __init__(self, process_noise=1., c=0.5, motor_noise=0.5, subj_noise=1., subj_vel_noise=10.,
-                 sigma=6., prop_noise=3., dt=1. / 60):
-        system = SubjectiveActor(process_noise=process_noise, c=c, motor_noise=motor_noise,
-                                 subj_noise=subj_noise, subj_vel_noise=subj_vel_noise, sigma=sigma,
-                                 prop_noise=prop_noise, dt=dt)
+    def __init__(self, process_noise=1., c=0.5, action_variability=0.5, subj_noise=1., subj_vel_noise=10.,
+                 sigma_target=6., sigma_cursor=3., dt=1. / 60):
+        system = SubjectiveActor(process_noise=process_noise, action_cost=c, action_variability=action_variability,
+                                 subj_noise=subj_noise, subj_vel_noise=subj_vel_noise, sigma_target=sigma_target,
+                                 sigma_cursor=sigma_cursor, dt=dt)
 
         super().__init__(system=system, delay=12)
 
