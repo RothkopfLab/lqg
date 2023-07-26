@@ -1,37 +1,27 @@
 import numpy as np
-import numpyro.handlers
+import numpyro
 from jax import numpy as jnp
 from jax.scipy.stats import norm
 from numpyro import distributions as dist
 
+default_prior = {"action_cost": dist.HalfNormal(2.),
+                 "sigma_target": dist.HalfNormal(50.),
+                 "action_variability": dist.HalfNormal(1.),
+                 "signal_dep_noise": dist.HalfNormal(1.),
+                 "sigma_cursor": dist.HalfNormal(12.5),
+                 "subj_noise": dist.HalfNormal(1.),
+                 "subj_vel_noise": dist.HalfNormal(2.),
+                 "sigma_target_0": dist.HalfNormal(50.),
+                 "sigma_target_1": dist.HalfNormal(50.),
+                 "sigma_target_2": dist.HalfNormal(50.),
+                 "sigma_target_3": dist.HalfNormal(50.),
+                 "sigma_target_4": dist.HalfNormal(50.),
+                 "sigma_target_5": dist.HalfNormal(50.),
+                 }
+
 
 def prior():
-    return {"c": dist.HalfNormal(2.),
-            "sigma": dist.HalfNormal(50.),
-            "motor_noise": dist.HalfNormal(1.),
-            "prop_noise": dist.HalfNormal(12.5),
-            "vel_noise": dist.HalfCauchy(10.),
-            "subj_noise": dist.HalfNormal(1.),
-            "subj_vel_noise": dist.HalfNormal(2.),
-            "subj_k": dist.Gamma(.01, .01),
-            "subj_lmbd": dist.Gamma(.01, .01),
-            "sigma_v": dist.HalfCauchy(50.),
-            "sigma_h": dist.HalfCauchy(50.),
-            "sigma_z": dist.HalfCauchy(50.),
-            "motor_noise_v": dist.HalfCauchy(1.),
-            "motor_noise_h": dist.HalfCauchy(1.),
-            "prop_noise_v": dist.HalfCauchy(1.),
-            "prop_noise_h": dist.HalfCauchy(1.),
-            "c_v": dist.HalfCauchy(50.),
-            "c_h": dist.HalfCauchy(50.),
-            "sigma_0": dist.HalfNormal(50.),
-            "sigma_1": dist.HalfNormal(50.),
-            "sigma_2": dist.HalfNormal(50.),
-            "sigma_3": dist.HalfNormal(50.),
-            "sigma_4": dist.HalfNormal(50.),
-            "sigma_5": dist.HalfNormal(50.),
-            "sigma_test": dist.Gamma(0.01, 0.01)
-            }
+    return default_prior
 
 
 def lognormal_params(mu, sigma):

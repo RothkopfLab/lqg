@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "lqg"
+version = "0.2.0"
+description = "(Inverse) optimal control for linear-quadratic Gaussian systems"
+authors = ["Dominik Straub <dominikstrb@mailbox.org>"]
+license = "AGPL-3.0-only"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+jax = ">=0.4.13"
+numpyro = ">=0.12.1"
+matplotlib = ">=3.2.2"
+arviz = ">=0.16.1"
+
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
