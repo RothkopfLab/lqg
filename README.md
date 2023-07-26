@@ -14,6 +14,12 @@ The package can be installed via `pip`
 python -m pip install lqg
 ```
 
+Since publication of our [eLife paper](https://elifesciences.org/articles/76635), I have substantially updated the package. If you want to use the package as described in the paper, please install an older version `<0.20`:
+
+```bash
+python -m pip install lqg==0.1.9
+```
+
 If you want the latest development version, I recommend cloning the repository and installing locally in a virtual environment: 
 
 ```bash
