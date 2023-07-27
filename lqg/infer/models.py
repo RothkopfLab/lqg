@@ -48,7 +48,7 @@ def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_param
         # observation noise
         sigma_n = numpyro.param(f"sigma_target_{n}", jnp.array(1.), constraint=dist.constraints.positive)
 
-        lqg = model_type(process_noise=process_noise, dt=dt, T=T, sigma=sigma_n, **params)
+        lqg = model_type(process_noise=process_noise, dt=dt, T=T, sigma_target=sigma_n, **params)
 
         numpyro.sample(f"x_{n}",
                        lqg.conditional_distribution(xn).to_event(1),
