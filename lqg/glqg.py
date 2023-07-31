@@ -89,7 +89,7 @@ class SignalDependentNoiseSystem(System):
         else:
             return x
 
-    def conditional_moments(self, x):
+    def conditional_moments(self, x, Sigma0=None):
         """ Conditional distribution p(x | theta)
 
         Args:
@@ -105,7 +105,7 @@ class SignalDependentNoiseSystem(System):
 
         # compute control and estimator gains
         gains = glqr.backward(self.actor)
-        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T)
+        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0)
 
         # initialize p(x_t, xhat_t | x_{1:t-1})
         # TODO: initialization should not always be zero for the unobserved dims
