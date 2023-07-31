@@ -134,7 +134,7 @@ class System:
         else:
             return x
 
-    def conditional_moments(self, x):
+    def conditional_moments(self, x, Sigma0=None):
         """ Conditional distribution p(x | theta)
 
         Args:
@@ -150,7 +150,7 @@ class System:
 
         # compute control and estimator gains
         gains = lqr.backward(self.actor)
-        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T)
+        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0)
 
         # set up joint dynamical system for state and belief
         # p(x_t, xhat_t | x_{t-1}, xhat_{t-1})
@@ -191,24 +191,24 @@ class System:
         # return jnp.vstack((mu0, mu)), jnp.vstack((Sigma0[jnp.newaxis], Sigma))
         return mu, Sigma
 
-    def conditional_distribution(self, x):
+    def conditional_distribution(self, x, Sigma0=None):
         n, T, d = x.shape
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
-        mu, Sigma = vmap(self.conditional_moments)(x)
+        mu, Sigma = vmap(self.conditional_moments, in_axes=(0, None))(x, Sigma0)
 
         # marginalize out xhat by using only those entries of mu and Sigma that correspond to x
         return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, :, :d, :d])
 
-    def log_likelihood(self, x):
+    def log_likelihood(self, x, Sigma0=None):
         # log likelihood of the states at time t+1 given all previous states up to time t
-        return self.conditional_distribution(x[:, :-1]).log_prob(x[:, 1:])
+        return self.conditional_distribution(x[:, :-1], Sigma0=Sigma0).log_prob(x[:, 1:])
 
-    def belief_tracking_distribution(self, x):
+    def belief_tracking_distribution(self, x, Sigma0=None):
         d = self.xdim
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
-        mu, Sigma = vmap(self.conditional_moments)(x)
+        mu, Sigma = vmap(self.conditional_moments, in_axes=(0, None))(x, Sigma0)
 
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, :, d:, d:])
