@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 import numpyro.distributions as dist
-from jax import vmap, random
+from jax import vmap, random, Array
 from jax.lax import scan
 
 from lqg.spec import LQGSpec
@@ -212,6 +212,73 @@ class System:
 
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, :, d:, d:])
+    
+    def _repr_latex_(self) -> str:
+        """
+        Produces a Latex representation of the system.
+        Can be used in jupyter notebooks via `display(system)`.
+
+        Returns:
+            str: Latex representation.
+        """
+        def bmatrix(arr: Array) -> str:
+            """
+            Produces a Latex bmatrix string representation of a given array.
+            Adapted from https://stackoverflow.com/a/17131750.
+
+            Args:
+                arr (Array): Array to represent as bmatrix.
+
+            Returns:
+                str: Latex bmatrix representation.
+            """
+            assert jnp.ndim(arr) == 2 
+
+            lines = (
+                jnp.array_str(arr, max_line_width=jnp.inf, precision=4)
+                .replace("[", "")
+                .replace("]", "")
+                .splitlines()
+            )
+
+            rows = ["\\begin{bmatrix}"]
+            rows += [" " + " & ".join(l.split()) + "\\\\" for l in lines]
+            rows += ["\\end{bmatrix}"]
+            bmatrix = "".join(rows)
+            return bmatrix
+
+        mats_dynamics = [
+            self.dynamics.A,
+            self.dynamics.B,
+            self.dynamics.F,
+            self.dynamics.V,
+            self.dynamics.W,
+            # self.dynamics.Q,
+            # self.dynamics.R
+        ]
+        mats_actor = [
+            self.actor.A,
+            self.actor.B,
+            self.actor.F,
+            self.actor.V,
+            self.actor.W,
+            self.actor.Q,
+            self.actor.R,
+        ]
+        mat_names = ["A", "B", "F", "V", "W", "Q", "R"]
+
+        latex_str = "\\begin{align*} \\text{Dynamics:}"
+        for mat, mat_name in zip(mats_dynamics, mat_names):
+            latex_str += f" &&{mat_name} = {bmatrix(mat[0])}"
+
+        latex_str += "\\\\"
+
+        latex_str += "\\text{Actor:}"
+        for mat, mat_name in zip(mats_actor, mat_names):
+            latex_str += f" &&{mat_name} = {bmatrix(mat[0])}"
+
+        latex_str += "\\end{align*}"
+        return latex_str
 
 
 def Dynamics(A, B, F, V, W, T=1000):
