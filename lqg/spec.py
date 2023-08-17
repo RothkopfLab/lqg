@@ -47,7 +47,7 @@ class LQGSpec:
         self.D = jnp.zeros((T, obs_dim, W.shape[-1], state_dim)) if D is None else D
 
     def tree_flatten(self):
-        children = (self.Q, self.R, self.A, self.B, self.V, self.W,
+        children = (self.Q, self.R, self.A, self.B, self.V, self.F, self.W,
                     self.q, self.Qf, self.qf, self.P, self.r, self.Cx, self.Cu, self.D)
         aux_data = None
         return (children, aux_data)
