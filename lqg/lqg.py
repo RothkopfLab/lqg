@@ -202,7 +202,7 @@ class System:
 
     def log_likelihood(self, x, Sigma0=None):
         # log likelihood of the states at time t+1 given all previous states up to time t
-        return self.conditional_distribution(x[:, :-1], Sigma0=Sigma0).log_prob(x[:, 1:])
+        return self.conditional_distribution(x, Sigma0=Sigma0).log_prob(x[:, 1:])
 
     def belief_tracking_distribution(self, x, Sigma0=None):
         d = self.xdim

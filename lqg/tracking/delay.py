@@ -7,6 +7,7 @@ from lqg.tracking.subjective import SubjectiveActor
 
 
 def delay_system(spec, delay):
+    T = spec.A.shape[0]
     d = spec.A.shape[1]
 
     A = jnp.stack([linalg.block_diag(A, jnp.diag(jnp.zeros(d * delay))) + jnp.diag(jnp.ones(d * delay), k=-d)
@@ -19,7 +20,20 @@ def delay_system(spec, delay):
 
     Q = jnp.stack([linalg.block_diag(Q, *[jnp.zeros_like(Q)] * delay) for Q in spec.Q])
 
-    return LQGSpec(A=A, B=B, F=F, V=V, W=spec.W, Q=Q, R=spec.R)
+    state_dim = Q.shape[1]
+    action_dim = spec.R.shape[1]
+    obs_dim = spec.W.shape[1]
+
+    q = jnp.zeros((T, state_dim))
+    Qf = Q[-1]
+    qf = q[-1]
+    P = jnp.zeros((T, action_dim, state_dim))
+    r = jnp.zeros((T, action_dim))
+    Cx = jnp.zeros((T, state_dim, V.shape[-1], state_dim))
+    Cu = jnp.zeros((T, state_dim, V.shape[-1], action_dim))
+    D = jnp.zeros((T, obs_dim, spec.W.shape[-1], state_dim))
+
+    return LQGSpec(A=A, B=B, F=F, V=V, W=spec.W, Q=Q, R=spec.R, q=q, Qf=Qf, qf=qf, P=P, r=r, Cx=Cx, Cu=Cu, D=D)
 
 
 class TemporalDelayModel(System):

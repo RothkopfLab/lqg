@@ -57,3 +57,12 @@ def test_simulate_signal_dependent():
     x = actor.simulate(rng_key=random.PRNGKey(0), n=20)
 
     assert x.shape == (20, 1000, 5)
+
+
+def test_belief_tracking_distribution():
+    T = 500
+    actor = BoundedActor(T=T)
+
+    x = actor.simulate(rng_key=random.PRNGKey(0), n=20)
+
+    assert actor.belief_tracking_distribution(x).shape() == (20, T - 1, actor.actor.A.shape[1])
