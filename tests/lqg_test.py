@@ -3,7 +3,7 @@ from jax import random
 
 from lqg.lqg import LQG
 
-from lqg.tracking import BoundedActor, SubjectiveActor, SignalDependentNoiseActor
+from lqg.tracking import BoundedActor, SubjectiveActor
 
 
 def test_lqg_simulate():
@@ -49,14 +49,6 @@ def test_simulate_subjective():
     x_s = subjective_actor.simulate(rng_key=random.PRNGKey(0), n=20)
 
     assert jnp.allclose(x_b, x_s)
-
-
-def test_simulate_signal_dependent():
-    actor = SignalDependentNoiseActor()
-
-    x = actor.simulate(rng_key=random.PRNGKey(0), n=20)
-
-    assert x.shape == (20, 1000, 5)
 
 
 def test_belief_tracking_distribution():
