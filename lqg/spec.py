@@ -15,8 +15,5 @@ class LQGSpec(NamedTuple):
     A: jnp.ndarray
     B: jnp.ndarray
     V: jnp.ndarray
-    Cx: jnp.ndarray
-    Cu: jnp.ndarray
     F: jnp.ndarray
     W: jnp.ndarray
-    D: jnp.ndarray

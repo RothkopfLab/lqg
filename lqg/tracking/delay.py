@@ -29,11 +29,8 @@ def delay_system(spec, delay):
     qf = q[-1]
     P = jnp.zeros((T, action_dim, state_dim))
     r = jnp.zeros((T, action_dim))
-    Cx = jnp.zeros((T, state_dim, V.shape[-1], state_dim))
-    Cu = jnp.zeros((T, state_dim, V.shape[-1], action_dim))
-    D = jnp.zeros((T, obs_dim, spec.W.shape[-1], state_dim))
 
-    return LQGSpec(A=A, B=B, F=F, V=V, W=spec.W, Q=Q, R=spec.R, q=q, Qf=Qf, qf=qf, P=P, r=r, Cx=Cx, Cu=Cu, D=D)
+    return LQGSpec(A=A, B=B, F=F, V=V, W=spec.W, Q=Q, R=spec.R, q=q, Qf=Qf, qf=qf, P=P, r=r)
 
 
 class TemporalDelayModel(System):
