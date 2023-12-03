@@ -1,0 +1,17 @@
+site_name: LQG Docs
+site_url: https://example.com/
+
+nav:
+    - Home: index.md
+    # - Simple: simple.ipynb
+    - TutorialTest: TutorialTest.ipynb
+    - Temp: temp.ipynb
+    - About: about.md
+
+#theme: readthedocs
+
+plugins:
+    - mkdocs-jupyter:
+        execute: false
+    #- mknotebooks:
+    #    execute: false  
