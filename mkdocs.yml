@@ -35,6 +35,12 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 
+extra:
+  social:
+    - icon: fontawesome/solid/scroll #solid/file-pdf
+      link: https://elifesciences.org/articles/76635
+      name: eLife Paper
+
 plugins:
   - mkdocs-jupyter:
       execute: false
