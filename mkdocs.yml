@@ -1,15 +1,14 @@
-site_name: LQG Docs
+site_name: "LQG: Inverse Optimal Control for Continuous Psychophysics"
 site_url: https://example.com/
 repo_url: https://github.com/RothkopfLab/lqg
 repo_name: RothkopfLab/lqg
 
 nav:
   - Home: index.md
-  # - Simple: simple.ipynb
-  - TutorialTest: TutorialTest.ipynb
-  - Altair: TutorialAltair.ipynb
-  - Data: notebooks/Data.ipynb
-  - Temp: temp.ipynb
+  - Tutorial:
+    - TutorialTest: TutorialTest.ipynb
+    - Altair: TutorialAltair.ipynb
+    - Data: notebooks/Data.ipynb
   - About: about.md
 
 theme:
@@ -18,6 +17,10 @@ theme:
     repo: fontawesome/brands/github
   logo: images/experimenter-actor-loop.png
   favicon: images/favicon.ico
+  
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
 
   palette:
     # Palette toggle for light mode
@@ -40,6 +43,9 @@ extra:
     - icon: fontawesome/solid/scroll #solid/file-pdf
       link: https://elifesciences.org/articles/76635
       name: eLife Paper
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - mkdocs-jupyter:
