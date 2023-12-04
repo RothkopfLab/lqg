@@ -14,27 +14,27 @@ nav:
 
 theme:
   name: material
-  palette:
-    primary: red
-    accent: teal
-    # # Palette toggle for light mode
-    # - scheme: default
-    #   toggle:
-    #     icon: material/brightness-7
-    #     name: Switch to dark mode
-    # # Palette toggle for dark mode
-    # - scheme: slate
-    #   toggle:
-    #     icon: material/brightness-4
-    #     name: Switch to light mode
   icon:
     repo: fontawesome/brands/github
-
-  logo: images/logo.png
+  logo: images/experimenter-actor-loop.png
   favicon: images/favicon.ico
+
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 plugins:
   - mkdocs-jupyter:
       execute: false
-# - mknotebooks:
-#   execute: false  
