@@ -1,17 +1,40 @@
 site_name: LQG Docs
 site_url: https://example.com/
+repo_url: https://github.com/RothkopfLab/lqg
+repo_name: RothkopfLab/lqg
 
 nav:
-    - Home: index.md
-    # - Simple: simple.ipynb
-    - TutorialTest: TutorialTest.ipynb
-    - Temp: temp.ipynb
-    - About: about.md
+  - Home: index.md
+  # - Simple: simple.ipynb
+  - TutorialTest: TutorialTest.ipynb
+  - Altair: TutorialAltair.ipynb
+  - Data: notebooks/Data.ipynb
+  - Temp: temp.ipynb
+  - About: about.md
 
-#theme: readthedocs
+theme:
+  name: material
+  palette:
+    primary: red
+    accent: teal
+    # # Palette toggle for light mode
+    # - scheme: default
+    #   toggle:
+    #     icon: material/brightness-7
+    #     name: Switch to dark mode
+    # # Palette toggle for dark mode
+    # - scheme: slate
+    #   toggle:
+    #     icon: material/brightness-4
+    #     name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+  logo: images/logo.png
+  favicon: images/favicon.ico
 
 plugins:
-    - mkdocs-jupyter:
-        execute: false
-    #- mknotebooks:
-    #    execute: false  
+  - mkdocs-jupyter:
+      execute: false
+# - mknotebooks:
+#   execute: false  
