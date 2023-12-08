@@ -4,11 +4,12 @@ repo_url: https://github.com/RothkopfLab/lqg
 repo_name: RothkopfLab/lqg
 
 nav:
-  - Home: index.md
-  - Tutorial:
-    - TutorialTest: TutorialTest.ipynb
+  - Home: README.md
+  - Tutorials:
+    #- TutorialTest: TutorialTest.ipynb
     - Altair: TutorialAltair.ipynb
     - Data: notebooks/Data.ipynb
+    - Simple: simple.ipynb
   - About: about.md
 
 theme:
@@ -21,6 +22,9 @@ theme:
   features:
     - navigation.tabs
     - navigation.tabs.sticky
+    - navigation.expand
+    - toc.follow
+    - search.suggest
 
   palette:
     # Palette toggle for light mode
@@ -48,5 +52,7 @@ extra_css:
   - stylesheets/extra.css
 
 plugins:
+  - search
   - mkdocs-jupyter:
       execute: false
+      ignore_h1_titles: True  # For now
