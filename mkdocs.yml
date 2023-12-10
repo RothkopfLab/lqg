@@ -1,5 +1,5 @@
 site_name: "LQG: Inverse Optimal Control for Continuous Psychophysics"
-site_url: https://example.com/
+site_url: https://example.com/  # TODO
 repo_url: https://github.com/RothkopfLab/lqg
 repo_name: RothkopfLab/lqg
 
@@ -10,6 +10,7 @@ nav:
     - Altair: TutorialAltair.ipynb
     - Data: notebooks/Data.ipynb
     - Simple: simple.ipynb
+  - API: api.md
   - About: about.md
 
 theme:
