@@ -16,7 +16,7 @@ jobs:
         uses: Lyoko-Jeremie/js-copy-github-action@master
         with:
           source: README.md
-          target: docs/README.md
+          target: docs/
   deploy:
     runs-on: ubuntu-latest
     steps:
