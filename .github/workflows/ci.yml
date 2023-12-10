@@ -5,8 +5,10 @@ on:
       - mkdocs
       #- master 
       #- main
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,7 +16,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: copy
         run: |
-          cp README.md docs/README.md
+          echo Start copy
+          cp ./README.md ./docs/README.md
+
   deploy:
     runs-on: ubuntu-latest
     steps:
