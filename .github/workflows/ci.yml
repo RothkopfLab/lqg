@@ -11,12 +11,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
       - name: copy
-        uses: Lyoko-Jeremie/js-copy-github-action@master
-        with:
-          source: README.md
-          target: docs/
+        run: |
+          List:
+          ls -a
   deploy:
     runs-on: ubuntu-latest
     steps:
