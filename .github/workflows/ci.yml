@@ -15,9 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: copy
-        run: |
-          echo Start copy
-          cp ./README.md ./docs/README.md
+        run: cp -v ./README.md ./docs/README.md
 
   deploy:
     runs-on: ubuntu-latest
