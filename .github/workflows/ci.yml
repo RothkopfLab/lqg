@@ -10,10 +10,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    uses: Lyoko-Jeremie/js-copy-github-action@master
-    with:
-      source: some-file
-      target: some-place
+    steps:
+      - uses: actions/checkout@master
+      - name: copy
+        uses: Lyoko-Jeremie/js-copy-github-action@master
+        with:
+          source: README.md
+          target: docs/README.md
   deploy:
     runs-on: ubuntu-latest
     steps:
