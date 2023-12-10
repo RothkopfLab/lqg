@@ -9,15 +9,11 @@ permissions:
   contents: write
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-    - name: copy file
-      uses: canastro/copy-file-action@master
-      with:
-        source: "README.md"
-        target: "docs/README.md"
+    uses: Lyoko-Jeremie/js-copy-github-action@master
+    with:
+      source: some-file
+      target: some-place
   deploy:
     runs-on: ubuntu-latest
     steps:
