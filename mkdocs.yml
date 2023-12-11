@@ -3,6 +3,7 @@ site_url: https://lukasmaninger.github.io/lqg/  # TODO
 repo_url: https://github.com/RothkopfLab/lqg
 repo_name: RothkopfLab/lqg
 copyright: Copyright &copy; 2021 - 2023 Dominik  # TODO
+site_description: A Python package for computational modeling  # TODO
 
 nav:
   - Home: README.md
@@ -59,7 +60,10 @@ markdown_extensions:
 
 plugins:
   - search
-  - social
+  - social:
+      cards_layout: default/only/image
+      cards_layout_options:
+        background_image: images/experimenter-actor-loop.png
   - mkdocs-jupyter:
       execute: false
       ignore_h1_titles: True  # For now
