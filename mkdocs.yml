@@ -1,17 +1,16 @@
 site_name: "LQG: Inverse Optimal Control for Continuous Psychophysics"
-site_url: https://example.com/  # TODO
+site_url: https://lukasmaninger.github.io/lqg/  # TODO
 repo_url: https://github.com/RothkopfLab/lqg
 repo_name: RothkopfLab/lqg
+copyright: Copyright &copy; 2021 - 2023 Dominik  # TODO
 
 nav:
   - Home: README.md
   - Tutorials:
-    #- TutorialTest: TutorialTest.ipynb
     - Altair: TutorialAltair.ipynb
     - Data: notebooks/Data.ipynb
     - Simple: simple.ipynb
   - API: api.md
-  - About: about.md
 
 theme:
   name: material
@@ -52,8 +51,15 @@ extra:
 extra_css:
   - stylesheets/extra.css
 
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+
 plugins:
   - search
+  - social
   - mkdocs-jupyter:
       execute: false
       ignore_h1_titles: True  # For now

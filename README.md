@@ -1,6 +1,6 @@
 # Inverse optimal control for continuous psychophysics
 
-![Experimenter-actor-loop](docs/images/experimenter-actor-loop.png)
+![Experimenter-actor-loop image](https://raw.githubusercontent.com/LukasManinger/lqg/mkdocs/docs/images/experimenter-actor-loop.png)
 
 This repository contains the official [JAX](https://github.com/google/jax) implementation of the inverse optimal control method presented in the paper:
 
