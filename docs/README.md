@@ -40,7 +40,7 @@ python -m pip install -e .
 ## Citation
 If you use our method or code in your research, please cite our paper:
 
-```
+```bibtex
 @article{straub2022putting,
   title={Putting perception into action with inverse optimal control for continuous psychophysics},
   author={Straub, Dominik and Rothkopf, Constantin A},
