@@ -31,5 +31,5 @@ jobs:
       - run: pip install \
                mkdocs-material \
                mkdocs-jupyter
-      - run: pip install .[dev]
+      # - run: pip install .[dev]
       - run: mkdocs gh-deploy --force
