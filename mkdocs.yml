@@ -8,22 +8,24 @@ site_description: A Python package for computational modeling  # TODO
 nav:
   - Home: README.md
   - Tutorials:
-    - Altair: TutorialAltair.ipynb
-    - Data: notebooks/Data.ipynb
-    - Simple: simple.ipynb
+    - tutorials/index.md
+    - Overview: tutorials/overview.ipynb
+    - Data: tutorials/data.ipynb
   - API: api.md
 
 theme:
   name: material
   icon:
     repo: fontawesome/brands/github
-  logo: images/experimenter-actor-loop.png
+  logo: images/logo.png  # experimenter-actor-loop.png
   favicon: images/favicon.ico
   
   features:
-    - navigation.tabs
-    - navigation.tabs.sticky
+    # - navigation.tabs
+    # - navigation.tabs.sticky
     - navigation.expand
+    - navigation.indexes
+    # - navigation.footer
     - toc.follow
     - search.suggest
 
@@ -56,7 +58,15 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+
 
 plugins:
   - search
