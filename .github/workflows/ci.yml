@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Copy README to docs folder
-        run: cp README.md docs/README.md
+      # - name: Copy README to docs folder
+        #  run: cp README.md docs/README.md
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
