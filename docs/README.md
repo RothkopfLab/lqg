@@ -4,16 +4,16 @@ icon: octicons/home-16
 
 # LQG: Inverse Optimal Control for Continuous Psychophysics
 
-<div align="center">
-
 ![Experimenter-actor-loop image](https://raw.githubusercontent.com/LukasManinger/lqg/mkdocs/docs/images/experimenter-actor-loop.png)
 
+<centering>
+
 [![Static Badge](https://img.shields.io/badge/documentation-546d78)](https://lukasmaninger.github.io/lqg/)
-[![PyPI - Version](https://img.shields.io/pypi/v/lqg)](https://pypi.org/project/lqg/) \
+[![PyPI - Version](https://img.shields.io/pypi/v/lqg)](https://pypi.org/project/lqg/)
 [![Static Badge](https://img.shields.io/badge/paper-10.7554%2FeLife.76635-blue)](https://doi.org/10.7554/eLife.76635)
 [![Static Badge](https://img.shields.io/badge/preprint-10.48550%2FarXiv.2303.16698-red)](https://doi.org/10.48550/arXiv.2303.16698)
 
-</div>
+</centering>
 
 This repository contains the official [JAX](https://github.com/google/jax) implementation of the inverse optimal control method presented in the paper:
 
