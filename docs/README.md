@@ -6,7 +6,7 @@ icon: octicons/home-16
 
 ![Experimenter-actor-loop image](https://raw.githubusercontent.com/LukasManinger/lqg/mkdocs/docs/images/experimenter-actor-loop.png)
 
-![PyPI - Version](https://img.shields.io/pypi/v/lqg) 
+[![Static Badge](https://img.shields.io/badge/documentation-546d78)](https://lukasmaninger.github.io/lqg/) ![PyPI - Version](https://img.shields.io/pypi/v/lqg)
 
 This repository contains the official [JAX](https://github.com/google/jax) implementation of the inverse optimal control method presented in the paper:
 
