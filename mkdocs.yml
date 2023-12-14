@@ -73,5 +73,4 @@ plugins:
   - search
   - mkdocs-jupyter:
       execute: false
-      ignore_h1_titles: True  # For now
       include_requirejs: true

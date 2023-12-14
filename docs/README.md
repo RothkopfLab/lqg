@@ -6,6 +6,8 @@ icon: octicons/home-16
 
 ![Experimenter-actor-loop image](https://raw.githubusercontent.com/LukasManinger/lqg/mkdocs/docs/images/experimenter-actor-loop.png)
 
+![PyPI - Version](https://img.shields.io/pypi/v/lqg) 
+
 This repository contains the official [JAX](https://github.com/google/jax) implementation of the inverse optimal control method presented in the paper:
 
 > [Straub, D., & Rothkopf, C. A. (2022). Putting perception into action with inverse optimal control for continuous psychophysics. eLife, 11, e76635.](https://elifesciences.org/articles/76635)
