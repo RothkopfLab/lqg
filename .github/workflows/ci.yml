@@ -29,7 +29,7 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install \
-               mkdocs-material[imaging] \
+               mkdocs-material \
                mkdocs-jupyter
       # - run: pip install .[dev]
       - run: mkdocs gh-deploy --force

@@ -71,7 +71,6 @@ markdown_extensions:
 
 plugins:
   - search
-  - social
   - mkdocs-jupyter:
       execute: false
       include_requirejs: true
