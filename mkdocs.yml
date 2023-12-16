@@ -16,7 +16,7 @@ nav:
 theme:
   name: material
   icon:
-    repo: fontawesome/brands/github
+    repo: octicons/mark-github-16  #material/github
   logo: images/logo.png  # experimenter-actor-loop.png
   favicon: images/favicon.ico
   
@@ -36,21 +36,23 @@ theme:
       primary: blue grey
       accent: teal
       toggle:
-        icon: material/brightness-7
+        icon: octicons/sun-16  #material/brightness-7
         name: Switch to dark mode
     # Palette toggle for dark mode
     - scheme: slate
       primary: blue grey
       accent: teal
       toggle:
-        icon: material/brightness-4
+        icon: octicons/moon-16  # material/brightness-4
         name: Switch to light mode
 
-extra:
-  social:
-    - icon: fontawesome/solid/scroll #solid/file-pdf
-      link: https://elifesciences.org/articles/76635
-      name: eLife Paper
+# extra:
+#   social:
+#     - icon: octicons/log-16  # material/file-document  # fontawesome/solid/scroll #solid/file-pdf
+#       link: https://elifesciences.org/articles/76635
+#       name: eLife Paper
+#     - icon: simple/x
+#       link: example.com
 
 extra_css:
   - stylesheets/extra.css
