@@ -1,7 +1,7 @@
 site_name: "LQG: Inverse Optimal Control for Continuous Psychophysics"
 site_url: https://lukasmaninger.github.io/lqg/  # TODO
-repo_url: https://github.com/RothkopfLab/lqg
-repo_name: RothkopfLab/lqg
+repo_url: https://github.com/LukasManinger/lqg/tree/mkdocs/  # https://github.com/RothkopfLab/lqg
+repo_name: LukasManinger/lqg  # RothkopfLab/lqg
 copyright: Copyright &copy; 2021 - 2023 Dominik  # TODO
 site_description: A Python package for computational modeling  # TODO
 
@@ -29,6 +29,7 @@ theme:
     - toc.follow
     - search.suggest
     - content.code.copy
+    # - content.action.view
 
   palette:
     # Palette toggle for light mode
@@ -73,6 +74,9 @@ markdown_extensions:
 
 plugins:
   - search
+  - git-revision-date-localized:
+      # enable_creation_date: true
+      type: timeago  # iso_date
   - mkdocs-jupyter:
       execute: false
       include_requirejs: true
