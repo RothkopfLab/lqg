@@ -75,7 +75,7 @@ markdown_extensions:
 plugins:
   - search
   - git-revision-date-localized:
-      # enable_creation_date: true
+      enable_creation_date: true
       type: timeago  # iso_date
   - mkdocs-jupyter:
       execute: false
