@@ -1,7 +1,3 @@
----
-icon: octicons/home-16
----
-
 # LQG: Inverse Optimal Control for Continuous Psychophysics
 
 ![Experimenter-actor-loop image](https://raw.githubusercontent.com/LukasManinger/lqg/mkdocs/docs/images/experimenter-actor-loop.png)
