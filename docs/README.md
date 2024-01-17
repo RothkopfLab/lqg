@@ -66,4 +66,4 @@ If you use our method or code in your research, please cite our paper:
 This implementation supports the basic LQG framework. For the extension to signal-dependent noise [(Todorov, 2005)](https://direct.mit.edu/neco/article-abstract/17/5/1084/6949/Stochastic-Optimal-Control-and-Estimation-Methods), please see [our NeurIPS 2021 paper](https://proceedings.neurips.cc/paper/2021/hash/4e55139e019a58e0084f194f758ffdea-Abstract.html) and [its implementation](https://github.com/RothkopfLab/inverse-optimal-control).
 
 ### Non-linear dynamics
-We are currently working on extending this approach to non-linear dynamics and non-quadratic costs. Please check out our [preprint](https://arxiv.org/abs/2303.16698). Code will be released soon.
+We are currently working on extending this approach to non-linear dynamics and non-quadratic costs. Please check out our [NeurIPS 2023 paper](https://arxiv.org/abs/2303.16698) and [its implementation](https://github.com/RothkopfLab/nioc-neurips).
