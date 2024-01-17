@@ -1,3 +1,5 @@
+# GitHub workflow to deploy MkDocs documentation to GitHub Pages
+
 name: ci 
 on:
   push:
@@ -14,8 +16,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # See https://github.com/timvink/mkdocs-git-revision-date-localized-plugin
-      # - name: Copy README to docs folder
-        #  run: cp README.md docs/README.md
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]

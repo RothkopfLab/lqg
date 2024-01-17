@@ -1,10 +1,12 @@
+# Documentation using MkDocs (https://www.mkdocs.org/)
 site_name: "LQG: Inverse Optimal Control for Continuous Psychophysics"
-site_url: https://lukasmaninger.github.io/lqg/  # TODO
-repo_url: https://github.com/LukasManinger/lqg/tree/mkdocs/  # https://github.com/RothkopfLab/lqg
-repo_name: LukasManinger/lqg  # RothkopfLab/lqg
-copyright: Copyright &copy; 2021 - 2023 Dominik  # TODO
-site_description: A Python package for computational modeling  # TODO
+site_url: https://rothkopflab.github.io/lqg/
+repo_url: https://github.com/RothkopfLab/lqg
+repo_name: RothkopfLab/lqg
+copyright: Copyright &copy; 2021 - 2023 Dominik Straub
+site_description: (Inverse) optimal control for linear-quadratic Gaussian systems
 
+# Navigation
 nav:
   - Home: README.md
   - Tutorials:
@@ -13,23 +15,20 @@ nav:
     - Data: tutorials/data.ipynb
   - API: api.md
 
+# Material for MkDocs (https://squidfunk.github.io/mkdocs-material/)
 theme:
   name: material
   icon:
-    repo: octicons/mark-github-16  #material/github
-  logo: images/logo.png  # experimenter-actor-loop.png
+    repo: octicons/mark-github-16
+  logo: images/logo.png
   favicon: images/favicon.ico
   
   features:
-    # - navigation.tabs
-    # - navigation.tabs.sticky
     - navigation.expand
     - navigation.indexes
-    # - navigation.footer
     - toc.follow
     - search.suggest
     - content.code.copy
-    # - content.action.view
 
   palette:
     # Palette toggle for light mode
@@ -37,46 +36,42 @@ theme:
       primary: blue grey
       accent: teal
       toggle:
-        icon: octicons/sun-16  #material/brightness-7
+        icon: octicons/sun-16
         name: Switch to dark mode
     # Palette toggle for dark mode
     - scheme: slate
       primary: blue grey
       accent: teal
       toggle:
-        icon: octicons/moon-16  # material/brightness-4
+        icon: octicons/moon-16
         name: Switch to light mode
-
-# extra:
-#   social:
-#     - icon: octicons/log-16  # material/file-document  # fontawesome/solid/scroll #solid/file-pdf
-#       link: https://elifesciences.org/articles/76635
-#       name: eLife Paper
-#     - icon: simple/x
-#       link: example.com
 
 extra_css:
   - stylesheets/extra.css
 
 markdown_extensions:
+  # For callouts
   - admonition
   - pymdownx.details
   - pymdownx.superfences
-  - pymdownx.tabbed:
-      alternate_style: true
+  # For grids
   - attr_list
   - md_in_html
+  # For emojis
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
-
-
 plugins:
+  # Search field
   - search
+  # Last updated info for pages
   - git-revision-date-localized:
       enable_creation_date: true
-      type: timeago  # iso_date
+      type: timeago
+  # Display Jupyter notebooks
   - mkdocs-jupyter:
+      # Only convert, don't run the notebooks
       execute: false
+      # Required for Altair/Plotly to work
       include_requirejs: true
