@@ -39,8 +39,9 @@ python -m pip install -e .
 ```
 
 ## Usage examples
-- `main.py` shows how to simulate data and infer parameters using the LQG model of the tracking task.
-- [`notebooks/Tutorial.ipynb`](https://github.com/RothkopfLab/lqg/blob/main/notebooks/01-HowTo.ipynb) explains the model and its parameters in more detail, including the extension to subjective internal models (based on [my tutorial at CCN 2022](https://www.youtube.com/watch?v=3DbO9n6_mNE))
+The notebooks in the [documentation](https://lukasmaninger.github.io/lqg/tutorials/overview/) illustrate how to use the `lqg` package to define optimal control models, simulate trajectories, and infer parameters from observed data.
+- [`Overview`](https://lukasmaninger.github.io/lqg/tutorials/overview/) explains the model and its parameters in more detail, including the extension to subjective internal models (based on [my tutorial at CCN 2022](https://www.youtube.com/watch?v=3DbO9n6_mNE))
+- [`Data`](https://lukasmaninger.github.io/lqg/tutorials/data/) applies the method to data from a tracking experiment
 
 ## Citation
 If you use our method or code in your research, please cite our paper:
