@@ -49,20 +49,3 @@ class DelayedSubjectiveActor(TemporalDelayModel):
                                  sigma_cursor=sigma_cursor, dt=dt)
 
         super().__init__(system=system, delay=12)
-
-
-if __name__ == '__main__':
-    from jax import random
-    import matplotlib.pyplot as plt
-
-    from lqg import xcorr
-
-    base_model = SubjectiveActor()
-    delayed_model = DelayedSubjectiveActor()
-
-    for model in [base_model, delayed_model]:
-        x = model.simulate(rng_key=random.PRNGKey(0), n=20)
-
-        lags, corrs = xcorr(jnp.diff(x[..., 1], axis=1), jnp.diff(x[..., 0], axis=1))
-        plt.plot(lags, corrs.mean(axis=0))
-    plt.show()
