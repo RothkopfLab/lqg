@@ -32,16 +32,16 @@ class TrackingTask(System):
 
 
 class BoundedActor(TrackingTask):
-    def __init__(self, process_noise=1.0, action_variability=0.5,
+    def __init__(self, dim=1, process_noise=1.0, action_variability=0.5,
                  sigma_target=6.0, sigma_cursor=6.0, action_cost=1.0, dt=1. / 60, T=1000):
-        super().__init__(dim=1, process_noise=process_noise,
+        super().__init__(dim=dim, process_noise=process_noise,
                          action_variability=action_variability,
                          sigma_target=sigma_target, sigma_cursor=sigma_cursor, action_cost=action_cost, dt=dt, T=T)
 
 
 class OptimalActor(TrackingTask):
-    def __init__(self, process_noise=1.0, action_variability=0.5,
+    def __init__(self, dim=1, process_noise=1.0, action_variability=0.5,
                  sigma_target=6.0, sigma_cursor=6.0, dt=1. / 60, T=1000):
-        super().__init__(dim=1, process_noise=process_noise,
+        super().__init__(dim=dim, process_noise=process_noise,
                          action_variability=action_variability,
                          sigma_target=sigma_target, sigma_cursor=sigma_cursor, action_cost=0., dt=dt, T=T)
