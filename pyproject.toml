@@ -4,7 +4,7 @@ version = "0.2.6"
 description = "(Inverse) optimal control for linear-quadratic Gaussian systems"
 authors = ["Dominik Straub <dominikstrb@mailbox.org>"]
 license = "AGPL-3.0-only"
-readme = "README.md"
+readme = "docs/README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10"
