@@ -17,7 +17,7 @@ def get_model_params(model_class):
     return parameters
 
 
-def lqg_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
+def lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60, **fixed_params):
     n, T, d = x.shape
 
     params = {}
@@ -25,14 +25,16 @@ def lqg_model(x, model_type, process_noise=1., dt=1. / 60, **fixed_params):
         if name in fixed_params:
             params[name] = fixed_params[name]
         else:
-            params[name] = numpyro.param(name, jnp.array(default), constraint=dist.constraints.positive)
+            params[name] = numpyro.param(
+                name, jnp.array(default), constraint=dist.constraints.positive
+            )
 
     lqg = model_type(process_noise=process_noise, dt=dt, T=T, **params)
 
     numpyro.sample("x", lqg.conditional_distribution(x).to_event(1), obs=x[:, 1:])
 
 
-def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_params):
+def common_lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60.0, **fixed_params):
     Nc, N, T, d = x.shape
 
     params = {}
@@ -41,20 +43,28 @@ def common_lqg_model(x, model_type, process_noise=1., dt=1. / 60., **fixed_param
             if name in fixed_params:
                 params[name] = fixed_params[name]
             else:
-                params[name] = numpyro.param(name, jnp.array(default), constraint=dist.constraints.positive)
+                params[name] = numpyro.param(
+                    name, jnp.array(default), constraint=dist.constraints.positive
+                )
 
     for n in range(Nc):
         xn = x[n]
         # observation noise
-        sigma_n = numpyro.param(f"sigma_target_{n}", jnp.array(1.), constraint=dist.constraints.positive)
+        sigma_n = numpyro.param(
+            f"sigma_target_{n}", jnp.array(1.0), constraint=dist.constraints.positive
+        )
 
-        lqg = model_type(process_noise=process_noise, dt=dt, T=T, sigma_target=sigma_n, **params)
+        lqg = model_type(
+            process_noise=process_noise, dt=dt, T=T, sigma_target=sigma_n, **params
+        )
 
-        numpyro.sample(f"x_{n}",
-                       lqg.conditional_distribution(xn).to_event(1),
-                       obs=xn[:, 1:])
-        
+        numpyro.sample(
+            f"x_{n}", lqg.conditional_distribution(xn).to_event(1), obs=xn[:, 1:]
+        )
+
+
 default_prior = prior()
+
 
 def shared_params_lqg_model(
     x,
@@ -75,7 +85,7 @@ def shared_params_lqg_model(
         priors: dict of prio distributions
         shared_params: list of parameter names that are shared across conditions
         dim: dimensionality of the state
-        **fixed_params: any parameter that should be fixed (i.e. n      ot estimated from the data)
+        **fixed_params: any parameter that should be fixed (i.e. not estimated from the data)
 
     """
     # data shape is conditions, trials, time steps, state dimensionality
@@ -122,6 +132,7 @@ def shared_params_lqg_model(
         numpyro.sample(
             f"x_{n}", lqg.conditional_distribution(xn).to_event(1), obs=xn[:, 1:]
         )
+
 
 # apply priors
 lifted_model = numpyro.handlers.lift(lqg_model, prior=default_prior)
