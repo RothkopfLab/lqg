@@ -1,6 +1,6 @@
 # LQG: Inverse Optimal Control for Continuous Psychophysics
 
-![Experimenter-actor-loop image](https://raw.githubusercontent.com/RothkopfLab/lqg/mkdocs/docs/images/experimenter-actor-loop.png)
+![Experimenter-actor-loop image](https://raw.githubusercontent.com/RothkopfLab/lqg/refs/heads/main/docs/images/experimenter-actor-loop.png)
 
 <centering>
 
@@ -39,9 +39,9 @@ python -m pip install -e .
 ```
 
 ## Usage examples
-The notebooks in the [documentation](https://lukasmaninger.github.io/lqg/tutorials/overview/) illustrate how to use the `lqg` package to define optimal control models, simulate trajectories, and infer parameters from observed data.
-- [`Overview`](https://lukasmaninger.github.io/lqg/tutorials/overview/) explains the model and its parameters in more detail, including the extension to subjective internal models (based on [my tutorial at CCN 2022](https://www.youtube.com/watch?v=3DbO9n6_mNE))
-- [`Data`](https://lukasmaninger.github.io/lqg/tutorials/data/) applies the method to data from a tracking experiment
+The notebooks in the [documentation](https://rothkopflab.github.io/lqg/tutorials/overview/) illustrate how to use the `lqg` package to define optimal control models, simulate trajectories, and infer parameters from observed data.
+- [`Overview`](https://rothkopflab.github.io/lqg/tutorials/overview/) explains the model and its parameters in more detail, including the extension to subjective internal models (based on [my tutorial at CCN 2022](https://www.youtube.com/watch?v=3DbO9n6_mNE))
+- [`Data`](https://rothkopflab.github.io/lqg/tutorials/data/) applies the method to data from a tracking experiment
 
 ## Citation
 If you use our method or code in your research, please cite our paper:
