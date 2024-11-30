@@ -7,7 +7,6 @@
 [![Static Badge](https://img.shields.io/badge/documentation-546d78)](https://rothkopflab.github.io/lqg/)
 [![PyPI - Version](https://img.shields.io/pypi/v/lqg)](https://pypi.org/project/lqg/)
 [![Static Badge](https://img.shields.io/badge/paper-10.7554%2FeLife.76635-blue)](https://doi.org/10.7554/eLife.76635)
-[![Static Badge](https://img.shields.io/badge/preprint-10.48550%2FarXiv.2303.16698-red)](https://doi.org/10.48550/arXiv.2303.16698)
 
 </centering>
 
@@ -22,7 +21,7 @@ The package can be installed via `pip`
 python -m pip install lqg
 ```
 
-Since publication of our [eLife paper](https://elifesciences.org/articles/76635), I have substantially updated the package. If you want to use the package as described in the paper, please install an older version `<0.20`:
+Since publication of our [eLife paper](https://elifesciences.org/articles/76635), I have substantially updated the package. If you want to use the package as described in the paper, please install an older version `<0.2.0`:
 
 ```bash
 python -m pip install lqg==0.1.9
@@ -63,4 +62,4 @@ If you use our method or code in your research, please cite our paper:
 This implementation supports the basic LQG framework. For the extension to signal-dependent noise [(Todorov, 2005)](https://direct.mit.edu/neco/article-abstract/17/5/1084/6949/Stochastic-Optimal-Control-and-Estimation-Methods), please see [our NeurIPS 2021 paper](https://proceedings.neurips.cc/paper/2021/hash/4e55139e019a58e0084f194f758ffdea-Abstract.html) and [its implementation](https://github.com/RothkopfLab/inverse-optimal-control).
 
 ### Non-linear dynamics
-We are currently working on extending this approach to non-linear dynamics and non-quadratic costs. Please check out our [NeurIPS 2023 paper](https://arxiv.org/abs/2303.16698) and [its implementation](https://github.com/RothkopfLab/nioc-neurips).
+We have recently extended this approach to non-linear dynamics and non-quadratic costs. Please check out our [NeurIPS 2023 paper](https://arxiv.org/abs/2303.16698) and [its implementation](https://github.com/RothkopfLab/nioc-neurips).
