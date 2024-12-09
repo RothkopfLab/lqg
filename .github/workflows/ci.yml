@@ -4,7 +4,7 @@ name: ci
 on:
   push:
     branches:
-      - mkdocs
+      - main
 
 permissions:
   contents: write
