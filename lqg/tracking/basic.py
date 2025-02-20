@@ -81,7 +81,7 @@ class OptimalActor(TrackingTask):
             action_variability=action_variability,
             sigma_target=sigma_target,
             sigma_cursor=sigma_cursor,
-            action_cost=0.0,
+            action_cost=1e-3,
             dt=dt,
             T=T,
         )
