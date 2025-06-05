@@ -104,18 +104,18 @@ class System:
             def loop(carry, t):
                 x, x_hat = carry
 
-                # generate observation
-                y = self.dynamics.F[t] @ x + self.dynamics.W[t] @ eta[t]
-
-                # update agent's belief
-                x_pred = self.actor.A[t] @ x_hat + self.actor.B[t] @ (gains.L[t] @ x_hat + gains.l[t])
-                x_hat = x_pred + K[t] @ (y - self.actor.F[t] @ x_hat)
-
                 # compute control based on agent's current belief
                 u = gains.L[t] @ x_hat + gains.l[t]
 
                 # apply dynamics
                 x = self.dynamics.A[t] @ x + self.dynamics.B[t] @ u + self.dynamics.V[t] @ epsilon[t]
+
+                # generate observation
+                y = self.dynamics.F[t] @ x + self.dynamics.W[t] @ eta[t]
+
+                # update agent's belief
+                x_pred = self.actor.A[t] @ x_hat + self.actor.B[t] @ u
+                x_hat = x_pred + K[t] @ (y - self.actor.F[t] @ x_hat)
 
                 return (x, x_hat), (x, x_hat, y, u)
 
@@ -123,7 +123,7 @@ class System:
 
             return (jnp.vstack([x0, x]),
                     jnp.vstack([xhat0, x_hat]),
-                    jnp.vstack([y, self.dynamics.F[-1] @ x[-1] + self.dynamics.W[-1] @ eta[-1]]),
+                    y,
                     u)
 
         # simulate n trials
@@ -159,15 +159,15 @@ class System:
         F = jnp.concatenate([
             jnp.concatenate([self.dynamics.A,
                              self.dynamics.B @ gains.L], axis=-1),
-            jnp.concatenate([K @ self.dynamics.F,
-                             self.actor.A + self.actor.B @ gains.L - K @ self.actor.F], axis=-1)],
+            jnp.concatenate([K @ self.dynamics.F @ self.dynamics.A,
+                             self.actor.A + self.actor.B @ gains.L - K @ self.actor.F @ self.actor.A], axis=-1)],
             axis=-2)
 
         # joint noise covariance Cholesky factor
         G = jnp.concatenate([
             jnp.concatenate([self.dynamics.V,
                              jnp.zeros((self.T, self.dynamics.A.shape[1], self.dynamics.W.shape[2]))], axis=-1),
-            jnp.concatenate([jnp.zeros((self.T, self.actor.A.shape[1], self.dynamics.A.shape[2])),
+            jnp.concatenate([K @ self.dynamics.F @ self.dynamics.V,
                              K @ self.dynamics.W], axis=-1)],
             axis=-2)
 

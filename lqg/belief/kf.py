@@ -7,9 +7,11 @@ def forward(spec: LQGSpec, Sigma0: jnp.ndarray) -> jnp.ndarray:
     def loop(P, step):
         A, F, V, W = step
 
+        P = A @ P @ A.T + V @ V.T
         G = F @ P @ F.T + W @ W.T
-        K = A @ P @ F.T @ jnp.linalg.inv(G)
-        P = V @ V.T + (A - K @ F) @ P @ A.T
+        K = P @ F.T @ jnp.linalg.inv(G)
+        
+        P = (jnp.eye(P.shape[0]) - K @ F) @ P
 
         return P, K
 
