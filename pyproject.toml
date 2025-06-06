@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lqg"
-version = "0.2.9"
+version = "0.2.10"
 description = "(Inverse) optimal control for linear-quadratic Gaussian systems"
 authors = ["Dominik Straub <dominikstrb@mailbox.org>"]
 license = "AGPL-3.0-only"
