@@ -115,7 +115,7 @@ class System:
 
                 # update agent's belief
                 x_pred = self.actor.A[t] @ x_hat + self.actor.B[t] @ u
-                x_hat = x_pred + K[t] @ (y - self.actor.F[t] @ x_hat)
+                x_hat = x_pred + K[t] @ (y - self.actor.F[t] @ x_pred)
 
                 return (x, x_hat), (x, x_hat, y, u)
 
