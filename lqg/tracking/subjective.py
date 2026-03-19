@@ -2,7 +2,7 @@ from itertools import chain
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from lqg.lqg import System, Actor, Dynamics
+from lqg.system import System, Actor, Dynamics
 
 def swap_dims(d, dim):
     idx = list(range(d))

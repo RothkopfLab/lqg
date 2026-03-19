@@ -2,7 +2,7 @@ from jax import numpy as jnp
 from jax.scipy import linalg
 
 from lqg.spec import LQGSpec
-from lqg.lqg import System, Dynamics, Actor
+from lqg.system import System, Dynamics, Actor
 from lqg.tracking.subjective import SubjectiveActor
 
 

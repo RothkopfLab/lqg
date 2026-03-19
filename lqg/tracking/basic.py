@@ -1,7 +1,7 @@
 from jax import numpy as jnp
 from jax.scipy import linalg
 
-from lqg.lqg import System, Actor
+from lqg.system import System, Actor
 
 
 class TrackingTask(System):
