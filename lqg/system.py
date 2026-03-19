@@ -16,7 +16,7 @@ class System:
 
     @property
     def T(self):
-        """ Length of trajectory
+        """Length of trajectory
 
         Returns:
             int: number of time steps
@@ -25,7 +25,7 @@ class System:
 
     @property
     def xdim(self):
-        """ State dimensionality
+        """State dimensionality
 
         Returns:
             int: dimensionality of state
@@ -34,7 +34,7 @@ class System:
 
     @property
     def ydim(self):
-        """ Observation dimensionality
+        """Observation dimensionality
 
         Returns:
             int: dimensionality of observation
@@ -43,7 +43,7 @@ class System:
 
     @property
     def bdim(self):
-        """ Belief dimensionality
+        """Belief dimensionality
 
         Returns:
             int: dimensionality of belief
@@ -52,15 +52,17 @@ class System:
 
     @property
     def udim(self):
-        """ Action dimensionality
+        """Action dimensionality
 
         Returns:
             int: dimensionality of action
         """
         return self.dynamics.B.shape[2]
 
-    def simulate(self, rng_key, n=1, x0=None, xhat0=None, Sigma0=None, return_all=False):
-        """ Simulate n trials
+    def simulate(
+        self, rng_key, n=1, x0=None, xhat0=None, Sigma0=None, return_all=False
+    ):
+        """Simulate n trials
 
         Args:
             rng_key (jax.random.PRNGKey): random number generator key
@@ -80,7 +82,7 @@ class System:
         K = kf.forward(self.actor, Sigma0=Sigma0)
 
         def simulate_trial(rng_key, x0=None, xhat0=None):
-            """ Simulate a single trial
+            """Simulate a single trial
 
             Args:
                 rng_key (jax.random.PRNGKey): random number generator key
@@ -108,7 +110,11 @@ class System:
                 u = gains.L[t] @ x_hat + gains.l[t]
 
                 # apply dynamics
-                x = self.dynamics.A[t] @ x + self.dynamics.B[t] @ u + self.dynamics.V[t] @ epsilon[t]
+                x = (
+                    self.dynamics.A[t] @ x
+                    + self.dynamics.B[t] @ u
+                    + self.dynamics.V[t] @ epsilon[t]
+                )
 
                 # generate observation
                 y = self.dynamics.F[t] @ x + self.dynamics.W[t] @ eta[t]
@@ -121,13 +127,12 @@ class System:
 
             _, (x, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(self.T))
 
-            return (jnp.vstack([x0, x]),
-                    jnp.vstack([xhat0, x_hat]),
-                    y,
-                    u)
+            return (jnp.vstack([x0, x]), jnp.vstack([xhat0, x_hat]), y, u)
 
         # simulate n trials
-        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0))(random.split(rng_key, num=n))
+        x, x_hat, y, u = vmap(lambda key: simulate_trial(key, x0=x0, xhat0=xhat0))(
+            random.split(rng_key, num=n)
+        )
 
         if return_all:
             return x, x_hat, y, u
@@ -135,7 +140,7 @@ class System:
             return x
 
     def conditional_moments(self, x, Sigma0=None):
-        """ Conditional distribution p(x | theta)
+        """Conditional distribution p(x | theta)
 
         Args:
             self: LQG
@@ -150,26 +155,50 @@ class System:
 
         # compute control and estimator gains
         gains = lqr.backward(self.actor)
-        K = kf.forward(self.actor, Sigma0=self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0)
+        K = kf.forward(
+            self.actor,
+            Sigma0=self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0,
+        )
 
         # set up joint dynamical system for state and belief
         # p(x_t, xhat_t | x_{t-1}, xhat_{t-1})
 
         # joint dynamics
-        F = jnp.concatenate([
-            jnp.concatenate([self.dynamics.A,
-                             self.dynamics.B @ gains.L], axis=-1),
-            jnp.concatenate([K @ self.dynamics.F @ self.dynamics.A,
-                             self.actor.A + self.actor.B @ gains.L - K @ self.actor.F @ self.actor.A], axis=-1)],
-            axis=-2)
+        F = jnp.concatenate(
+            [
+                jnp.concatenate([self.dynamics.A, self.dynamics.B @ gains.L], axis=-1),
+                jnp.concatenate(
+                    [
+                        K @ self.dynamics.F @ self.dynamics.A,
+                        self.actor.A
+                        + self.actor.B @ gains.L
+                        - K @ self.actor.F @ self.actor.A,
+                    ],
+                    axis=-1,
+                ),
+            ],
+            axis=-2,
+        )
 
         # joint noise covariance Cholesky factor
-        G = jnp.concatenate([
-            jnp.concatenate([self.dynamics.V,
-                             jnp.zeros((self.T, self.dynamics.A.shape[1], self.dynamics.W.shape[2]))], axis=-1),
-            jnp.concatenate([K @ self.dynamics.F @ self.dynamics.V,
-                             K @ self.dynamics.W], axis=-1)],
-            axis=-2)
+        G = jnp.concatenate(
+            [
+                jnp.concatenate(
+                    [
+                        self.dynamics.V,
+                        jnp.zeros(
+                            (self.T, self.dynamics.A.shape[1], self.dynamics.W.shape[2])
+                        ),
+                    ],
+                    axis=-1,
+                ),
+                jnp.concatenate(
+                    [K @ self.dynamics.F @ self.dynamics.V, K @ self.dynamics.W],
+                    axis=-1,
+                ),
+            ],
+            axis=-2,
+        )
 
         # initialize p(x_t, xhat_t | x_{1:t-1})
         # TODO: initialization should not always be zero for the unobserved dims
@@ -181,10 +210,18 @@ class System:
             F, G, x = step
 
             # conditioning and marginalizing
-            mu = F @ mu + (F @ Sigma)[:, :obs_dim] @ jnp.linalg.solve(Sigma[:obs_dim, :obs_dim], x - mu[:obs_dim])
+            mu = F @ mu + (F @ Sigma)[:, :obs_dim] @ jnp.linalg.solve(
+                Sigma[:obs_dim, :obs_dim], x - mu[:obs_dim]
+            )
 
-            Sigma = F @ Sigma @ F.T + G @ G.T - (F @ Sigma)[:, :obs_dim] @ jnp.linalg.solve(Sigma[:obs_dim, :obs_dim],
-                                                                                            (Sigma @ F.T)[:obs_dim, :])
+            Sigma = (
+                F @ Sigma @ F.T
+                + G @ G.T
+                - (F @ Sigma)[:, :obs_dim]
+                @ jnp.linalg.solve(
+                    Sigma[:obs_dim, :obs_dim], (Sigma @ F.T)[:obs_dim, :]
+                )
+            )
             return (mu, Sigma), (mu, Sigma)
 
         _, (mu, Sigma) = scan(scan_fn, (mu0, Sigma0), (F, G, x[:-1]))
@@ -198,7 +235,7 @@ class System:
         mu, Sigma = vmap(self.conditional_moments, in_axes=(0, None))(x, Sigma0)
 
         # marginalize out xhat by using only those entries of mu and Sigma that correspond to x
-        return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, :, :d, :d])
+        return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, :, :d, :d]).to_event(1)
 
     def log_likelihood(self, x, Sigma0=None):
         # log likelihood of the states at time t+1 given all previous states up to time t
@@ -212,7 +249,10 @@ class System:
 
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, :, d:, d:])
-    
+
+    def to_numpyro(self, Sigma0=None):
+        return NumpyroLQG(self, Sigma0=Sigma0)
+
     def _repr_latex_(self) -> str:
         """
         Produces a Latex representation of the system.
@@ -221,6 +261,7 @@ class System:
         Returns:
             str: Latex representation.
         """
+
         def bmatrix(arr: Array) -> str:
             """
             Produces a Latex bmatrix string representation of a given array.
@@ -232,7 +273,7 @@ class System:
             Returns:
                 str: Latex bmatrix representation.
             """
-            assert jnp.ndim(arr) == 2 
+            assert jnp.ndim(arr) == 2
 
             lines = (
                 jnp.array_str(arr, max_line_width=jnp.inf, precision=4)
@@ -285,7 +326,16 @@ def Dynamics(A, B, F, V, W, T=1000):
     xdim = A.shape[0]
     udim = B.shape[1]
 
-    return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=jnp.zeros((xdim, xdim)), R=jnp.zeros((udim, udim)), T=T - 1)
+    return time_stack_spec(
+        A=A,
+        B=B,
+        F=F,
+        V=V,
+        W=W,
+        Q=jnp.zeros((xdim, xdim)),
+        R=jnp.zeros((udim, udim)),
+        T=T - 1,
+    )
 
 
 def Actor(A, B, F, V, W, Q, R, T=1000):
@@ -297,3 +347,15 @@ class LQG(System):
         spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T - 1)
 
         super().__init__(actor=spec, dynamics=spec)
+
+
+class NumpyroLQG(dist.Distribution):
+    def __init__(self, system: System, Sigma0=None):
+        self.system = system
+        self.Sigma0 = Sigma0
+
+    def log_prob(self, x):
+        return self.system.log_likelihood(x, Sigma0=self.Sigma0)
+
+    def sample(self, rng_key, sample_shape=()):
+        return self.system.simulate(rng_key, n=sample_shape[0], Sigma0=self.Sigma0)

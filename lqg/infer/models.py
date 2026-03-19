@@ -31,7 +31,7 @@ def lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60, **fixed_params):
 
     lqg = model_type(process_noise=process_noise, dt=dt, T=T, **params)
 
-    numpyro.sample("x", lqg.conditional_distribution(x).to_event(1), obs=x[:, 1:])
+    numpyro.sample("x", lqg.conditional_distribution(x), obs=x[:, 1:])
 
 
 def common_lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60.0, **fixed_params):
@@ -59,7 +59,7 @@ def common_lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60.0, **fixed_pa
         )
 
         numpyro.sample(
-            f"x_{n}", lqg.conditional_distribution(xn).to_event(1), obs=xn[:, 1:]
+            f"x_{n}", lqg.conditional_distribution(xn), obs=xn[:, 1:]
         )
 
 
@@ -130,7 +130,7 @@ def shared_params_lqg_model(
 
         # likelihood
         numpyro.sample(
-            f"x_{n}", lqg.conditional_distribution(xn).to_event(1), obs=xn[:, 1:]
+            f"x_{n}", lqg.conditional_distribution(xn), obs=xn[:, 1:]
         )
 
 
