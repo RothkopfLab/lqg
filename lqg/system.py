@@ -363,5 +363,8 @@ class NumpyroLQG(dist.Distribution):
     def log_prob(self, x):
         return self.system.log_likelihood(x, Sigma0=self.Sigma0)
 
-    def sample(self, rng_key, sample_shape=()):
-        return self.system.simulate(rng_key, n=sample_shape[0], Sigma0=self.Sigma0)
+    def sample(self, key, sample_shape=()):
+        if len(sample_shape) == 0:
+            return self.system.simulate(key, n=1, Sigma0=self.Sigma0)[0]
+        else:
+            return self.system.simulate(key, n=sample_shape[0], Sigma0=self.Sigma0)
