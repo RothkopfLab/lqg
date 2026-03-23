@@ -1,8 +1,8 @@
 import jax.numpy as jnp
 from jax import random
+from numpyro import handlers
 
 from lqg.system import LQG
-
 from lqg.tracking import BoundedActor, SubjectiveActor
 
 
@@ -61,3 +61,5 @@ def test_numpyro_distribution():
     assert x.shape == (10, T, 2)
 
     assert numpyro_model.log_prob(x) is not None
+
+    assert handlers.seed(numpyro_model, rng_seed=0)(rng_key=random.PRNGKey(2)).shape == (T, 2)
