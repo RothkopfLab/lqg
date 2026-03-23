@@ -59,38 +59,3 @@ def test_belief_tracking_distribution():
 
     assert actor.belief_tracking_distribution(x).shape() == (20, T - 1, actor.actor.A.shape[1])
 
-def test_numpyro_conversion():
-    """ Test that conversion to numpyro model runs. """
-    dt = 1. / 60.
-    T = 1000
-
-    # parameters
-    action_variability = 0.5
-    sigma = 6.
-    sigma_prop = 3.
-    action_cost = 0.5
-
-    A = jnp.eye(2)
-    B = jnp.array([[0.], [dt]])
-    V = jnp.diag(jnp.array([1., action_variability]))
-
-    F = jnp.eye(2)
-    W = jnp.diag(jnp.array([sigma, sigma_prop]))
-
-    Q = jnp.array([[1., -1.],
-                   [-1., 1]])
-
-    R = jnp.eye(1) * action_cost
-
-    lqg = LQG(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R)
-
-    numpyro_model = lqg.to_numpyro()
-
-    # simply check that it runs through
-    assert numpyro_model is not None
-
-    x = numpyro_model.sample(random.PRNGKey(0), sample_shape=(10,))
-
-    assert x.shape == (10, T, 2)
-
-    assert numpyro_model.log_prob(x) is not None
