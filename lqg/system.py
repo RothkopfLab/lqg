@@ -354,6 +354,11 @@ class NumpyroLQG(dist.Distribution):
         self.system = system
         self.Sigma0 = Sigma0
 
+        super().__init__(
+            event_shape=(system.T - 1, system.xdim),
+            batch_shape=(),
+        )
+
     def log_prob(self, x):
         return self.system.log_likelihood(x, Sigma0=self.Sigma0)
 
