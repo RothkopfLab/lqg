@@ -250,8 +250,8 @@ class System:
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, :, d:, d:])
 
-    def to_numpyro(self, Sigma0=None):
-        return NumpyroLQG(self, Sigma0=Sigma0)
+    def to_numpyro(self, Sigma0=None, xdim=None):
+        return NumpyroLQG(self, Sigma0=Sigma0, xdim=xdim)
 
     def _repr_latex_(self) -> str:
         """
@@ -350,12 +350,13 @@ class LQG(System):
 
 
 class NumpyroLQG(dist.Distribution):
-    def __init__(self, system: System, Sigma0=None):
+    def __init__(self, system: System, xdim=None, Sigma0=None):
         self.system = system
         self.Sigma0 = Sigma0
+        xdim = system.xdim if xdim is None else xdim
 
         super().__init__(
-            event_shape=(system.T - 1, system.xdim),
+            event_shape=(system.T, xdim),
             batch_shape=(),
         )
 
