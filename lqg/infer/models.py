@@ -29,9 +29,9 @@ def lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60, **fixed_params):
                 name, jnp.array(default), constraint=dist.constraints.positive
             )
 
-    lqg = model_type(process_noise=process_noise, dt=dt, T=T, **params)
+    lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, **params)
 
-    numpyro.sample("x", lqg.conditional_distribution(x), obs=x[:, 1:])
+    numpyro.sample("x", lqg.to_numpyro(), obs=x)
 
 
 def common_lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60.0, **fixed_params):
@@ -58,9 +58,7 @@ def common_lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60.0, **fixed_pa
             process_noise=process_noise, dt=dt, T=T, sigma_target=sigma_n, **params
         )
 
-        numpyro.sample(
-            f"x_{n}", lqg.conditional_distribution(xn), obs=xn[:, 1:]
-        )
+        numpyro.sample(f"x_{n}", lqg.conditional_distribution(xn), obs=xn[:, 1:])
 
 
 default_prior = prior()
@@ -129,9 +127,7 @@ def shared_params_lqg_model(
         lqg = model_type(process_noise=process_noise, dt=dt, T=T, dim=dim, **params)
 
         # likelihood
-        numpyro.sample(
-            f"x_{n}", lqg.conditional_distribution(xn), obs=xn[:, 1:]
-        )
+        numpyro.sample(f"x_{n}", lqg.conditional_distribution(xn), obs=xn[:, 1:])
 
 
 # apply priors
