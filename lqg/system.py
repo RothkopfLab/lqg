@@ -334,17 +334,17 @@ def Dynamics(A, B, F, V, W, T=1000):
         W=W,
         Q=jnp.zeros((xdim, xdim)),
         R=jnp.zeros((udim, udim)),
-        T=T - 1,
+        T=T,
     )
 
 
 def Actor(A, B, F, V, W, Q, R, T=1000):
-    return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T - 1)
+    return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
 
 class LQG(System):
     def __init__(self, A, B, F, V, W, Q, R, T=1000):
-        spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T - 1)
+        spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
         super().__init__(actor=spec, dynamics=spec)
 
@@ -356,7 +356,7 @@ class NumpyroLQG(dist.Distribution):
         xdim = system.xdim if xdim is None else xdim
 
         super().__init__(
-            event_shape=(system.T, xdim),
+            event_shape=(system.T + 1, xdim),
             batch_shape=(),
         )
 

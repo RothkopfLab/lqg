@@ -14,25 +14,25 @@ from lqg.infer.utils import sample_from_prior
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Coverage runs")
-    parser.add_argument("--ntrial", type=int, default=20,
-                        help="Number of trials .")
+    parser.add_argument("--ntrial", type=int, default=20, help="Number of trials .")
     parser.add_argument("--seed", type=int, default=42, help="Seed for the simulation")
-    parser.add_argument("--time", type=int, default=720,
-                        help="Time steps per trial")
-    parser.add_argument("--nsamp", type=int, default=5_000,
-                        help="Number of samples drawn by NUTS")
-    parser.add_argument("--nwarmup", type=int, default=2_500,
-                        help="Number of burn-in samples.")
-    parser.add_argument("--nchain", type=int, default=4,
-                        help="Number of chains.")
-    parser.add_argument("--model", type=str, default="BoundedActor",
-                        help="Model type (lqg.tracking)")
-    parser.add_argument('--plot', action=argparse.BooleanOptionalAction)
-    parser.add_argument('--save', action=argparse.BooleanOptionalAction)
+    parser.add_argument("--time", type=int, default=720, help="Time steps per trial")
+    parser.add_argument(
+        "--nsamp", type=int, default=5_000, help="Number of samples drawn by NUTS"
+    )
+    parser.add_argument(
+        "--nwarmup", type=int, default=2_500, help="Number of burn-in samples."
+    )
+    parser.add_argument("--nchain", type=int, default=4, help="Number of chains.")
+    parser.add_argument(
+        "--model", type=str, default="BoundedActor", help="Model type (lqg.tracking)"
+    )
+    parser.add_argument("--plot", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--save", action=argparse.BooleanOptionalAction)
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parse_args()
 
     Model = getattr(tracking, args.model)
@@ -54,11 +54,15 @@ if __name__ == '__main__':
 
     nuts_kernel = NUTS(lifted_model, init_strategy=init_to_median)
 
-    mcmc = MCMC(nuts_kernel, num_warmup=args.nwarmup, num_samples=args.nsamp,
-                num_chains=args.nchain)
+    mcmc = MCMC(
+        nuts_kernel,
+        num_warmup=args.nwarmup,
+        num_samples=args.nsamp,
+        num_chains=args.nchain,
+    )
     mcmc.run(random.PRNGKey(args.seed), x, Model)
 
-    idata = az.convert_to_inference_data(mcmc)
+    idata = az.from_numpyro(mcmc)
 
     if args.plot:
         az.plot_pair(idata, reference_values=params, figsize=(6, 6), kind="hexbin")
