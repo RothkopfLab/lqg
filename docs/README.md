@@ -42,6 +42,60 @@ The notebooks in the [documentation](https://rothkopflab.github.io/lqg/tutorials
 - [`Overview`](https://rothkopflab.github.io/lqg/tutorials/overview/) explains the model and its parameters in more detail, including the extension to subjective internal models (based on [my tutorial at CCN 2022](https://www.youtube.com/watch?v=3DbO9n6_mNE))
 - [`Data`](https://rothkopflab.github.io/lqg/tutorials/data/) applies the method to data from a tracking experiment
 
+## Running fits for the remaining two participants
+1. Generate participant `.mat` files from annotated tracking data in the same layout as `data/data.mat`:
+
+```bash
+poetry run python convert_tracking_to_data_mat.py JDB
+poetry run python convert_tracking_to_data_mat.py KLB
+```
+
+By default, the script reads from `../AnnotatedDataRothkopf/tracking` and writes to `data/data_JDB.mat` and `data/data_KLB.mat`.
+
+2. Quick smoke test (tiny MCMC on LKC) to verify the fit script runs end-to-end:
+
+```bash
+poetry run python cpp_data_fit.py \
+  --delay 12 \
+  --clip 180 \
+  --nsamp 1 \
+  --nburnin 1 \
+  --nchain 4 \
+  --seed 0 \
+  --model BoundedActor \
+  --data-mat data.mat \
+  --output-basename smoke-LKC \
+  --shared_params
+```
+
+3. Run the full no-shared-parameter fits for the two remaining participants:
+
+```bash
+poetry run python cpp_data_fit.py \
+  --delay 12 \
+  --clip 180 \
+  --nsamp 2500 \
+  --nburnin 1000 \
+  --nchain 4 \
+  --seed 0 \
+  --model BoundedActor \
+  --data-mat data_JDB.mat \
+  --output-basename BoundedActor-0-JDB \
+  --shared_params
+
+poetry run python cpp_data_fit.py \
+  --delay 12 \
+  --clip 180 \
+  --nsamp 2500 \
+  --nburnin 1000 \
+  --nchain 4 \
+  --seed 0 \
+  --model BoundedActor \
+  --data-mat data_KLB.mat \
+  --output-basename BoundedActor-0-KLB \
+  --shared_params
+```
+
 ## Citation
 If you use our method or code in your research, please cite our paper:
 

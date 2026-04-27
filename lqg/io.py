@@ -1,4 +1,6 @@
 import os
+import warnings
+
 import numpy as np
 import scipy.io as spio
 
@@ -42,13 +44,21 @@ def _todict(matobj):
     return dict
 
 
-def load_tracking_data(delay=12, clip=120, subtract_mean=True, data_path="data/"):
+def load_tracking_data(
+    delay=12,
+    clip=120,
+    subtract_mean=True,
+    data_path="data/",
+    mat_filename="data.mat",
+):
     """ Load tracking data from Bonnen et al. (2015)
 
     Args:
         delay: temporal delay between target and response
         clip: clip the first n time steps
         subtract_mean: subtract the mean of both trajectories?
+        data_path: directory containing the .mat file
+        mat_filename: file name under ``data_path`` (e.g. ``data.mat``, ``data_JDB.mat``)
 
     Returns:
         np.array: data from tracking task
@@ -58,7 +68,7 @@ def load_tracking_data(delay=12, clip=120, subtract_mean=True, data_path="data/"
     arcscale = 1.32
 
     # load matlab file
-    mat = loadmat(os.path.join(data_path, "data.mat"))
+    mat = loadmat(os.path.join(data_path, mat_filename))
 
     # get target blob widths
     sigma = (mat["sigma"] * arcscale).round()
@@ -82,12 +92,25 @@ def load_tracking_data(delay=12, clip=120, subtract_mean=True, data_path="data/"
         target = target - np.mean(target, axis=1, keepdims=True)
         mouse = mouse - np.mean(mouse, axis=1, keepdims=True)
 
-    # stack data from all trials
-    data = np.stack(
-        [np.array(
-            [target[np.where(sigma == blob_width)[0], :],
-             mouse[np.where(sigma == blob_width)[0], :]])
-            for blob_width in sigmas])
+    # Per-condition blocks: shape (2, n_trials_c, T). np.stack requires identical n_trials_c.
+    blocks = []
+    for blob_width in sigmas:
+        idx = np.where(sigma == blob_width)[0]
+        blocks.append(
+            np.array([target[idx, :], mouse[idx, :]])
+        )
+    trial_counts = [b.shape[1] for b in blocks]
+    m = min(trial_counts)
+    if max(trial_counts) != m:
+        warnings.warn(
+            f"Unequal trials per blob condition {trial_counts}; "
+            f"using the first {m} trials per condition so the LQG array stacks.",
+            UserWarning,
+            stacklevel=2,
+        )
+        blocks = [b[:, :m, :] for b in blocks]
+
+    data = np.stack(blocks)
 
     # bring in right shape for our analysis methods
     data = data.transpose(0, 2, 3, 1)
