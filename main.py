@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument(
         "--model", type=str, default="BoundedActor", help="Model type (lqg.tracking)"
     )
-    parser.add_argument("--plot", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--plot", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--save", action=argparse.BooleanOptionalAction)
     return parser.parse_args()
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     idata = az.from_numpyro(mcmc)
 
     if args.plot:
-        az.plot_pair(idata, reference_values=params, figsize=(6, 6), kind="hexbin")
+        az.plot_pair(idata)
         plt.show()
 
     if args.save:

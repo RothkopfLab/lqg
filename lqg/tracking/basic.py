@@ -22,7 +22,7 @@ class TrackingTask(System):
         d = 2 * dim
         # dynamics model
         A = jnp.eye(d)
-        B = dt * linalg.block_diag(*[jnp.array([[0.0], [10.0]])] * dim)
+        B = dt * linalg.block_diag(*[jnp.array([[0.0], [1.0]])] * dim)
 
         # observation model
         F = jnp.eye(d)
@@ -106,7 +106,7 @@ class RelativeObservationBoundedActor(System):
 
         # dynamics model
         A = jnp.eye(d)
-        B = dt * linalg.block_diag(*[jnp.array([[0.0], [10.0]])] * dim)
+        B = dt * linalg.block_diag(*[jnp.array([[0.0], [1.0]])] * dim)
 
         # observation model
         F = linalg.block_diag(*[jnp.array([[1.0, -1.0]])] * dim)
