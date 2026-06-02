@@ -65,7 +65,7 @@ class RelativeObservationMultisensoryDelayModel(System):
         damping=0.0015,
         m=1.0,
         tau=0.066,
-        dt=0.075,
+        dt=1 / 60.0,
         delays=[1, 1],
         T=1000,
     ):
@@ -76,7 +76,14 @@ class RelativeObservationMultisensoryDelayModel(System):
         B = jnp.vstack([jnp.zeros((1, 1)), B])
         V = linalg.block_diag(jnp.diag(jnp.array([process_noise])), V)
 
-        F = jnp.array([[1.0, -1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]])
+        Fs = [
+            jnp.array([[0.0, 0.0, 1.0, 0.0]]),
+            jnp.array([[1.0, -1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]]),
+        ]
+        Ws = [
+            jnp.diag(jnp.array([sigmas[0]])),
+            jnp.diag(jnp.array([sigmas[1], sigmas[1]])),
+        ]
         Q = jnp.array(
             [
                 [1.0, -1.0, 0.0, 0.0],
@@ -91,8 +98,8 @@ class RelativeObservationMultisensoryDelayModel(System):
             A,
             B,
             V,
-            [F for _ in sigmas],
-            [sigma * jnp.eye(2) for sigma in sigmas],
+            Fs,
+            Ws,
             Q,
             R,
             delays=delays,
@@ -105,14 +112,14 @@ class IndependentObservationMultisensoryDelayModel(System):
     def __init__(
         self,
         process_noise=1.0,
-        sigma_target=1.0,  # TODO there should be no proprioceptive observation of the target, duh
+        sigma_target=1.0,
         sigmas_cursor=[1.0, 1.0],
         action_variability=0.5,
         action_cost=0.1,
         damping=0.0015,
         m=1.0,
         tau=0.066,
-        dt=0.075,
+        dt=1 / 60.0,
         delays=[1, 1],
         T=1000,
     ):
@@ -125,14 +132,14 @@ class IndependentObservationMultisensoryDelayModel(System):
 
         Fs = [
             jnp.array(
-                [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]]
-            ),  # the proprioceptive observation contains the cursor position and velocity, but no information about the target
+                [[0.0, 0.0, 1.0, 0.0]]
+            ),  # the proprioceptive observation contains the cursor velocity, but no information about the target
             jnp.array(
                 [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]]
-            ),  # the visual observation contains the target position and cursor position and cursor velocity
+            ),  # the visual observation contains the target position, cursor position and cursor velocity
         ]
         Ws = [
-            jnp.diag(jnp.array([sigmas_cursor[0], sigmas_cursor[0]])),
+            jnp.diag(jnp.array([sigmas_cursor[0]])),
             jnp.diag(jnp.array([sigma_target, sigmas_cursor[1], sigmas_cursor[1]])),
         ]
 
@@ -166,22 +173,47 @@ if __name__ == "__main__":
 
     from lqg import xcorr
 
-    for sigma in [1.0, 6.0, 60.0]:
-        model = IndependentObservationMultisensoryDelayModel(
-            delays=[1, 2],
-            sigma_target=6.0,
-            sigmas_cursor=[3.0, sigma],
-            action_cost=1e-2,
+    delay_vis = 0.15
+    delay_prop = 0.075
+    delays = [int(delay_prop / (1 / 60.0)), int(delay_vis / (1 / 60.0))]
+    print(delays)
+
+    sigma_prop = 10.0
+    sigma_target = 10.0
+
+    f, ax = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    for sigma in [1.0, 30.0, 100.0]:
+        model = RelativeObservationMultisensoryDelayModel(
+            delays=delays,
+            sigmas=[sigma_prop, jnp.sqrt(sigma_target ** 2 + sigma ** 2)],
+            action_cost=1e-3,
         )
 
-        x = model.simulate(random.PRNGKey(0), n=20)
+        x = model.simulate(random.PRNGKey(0), n=100)
 
         vels = jnp.diff(x, axis=-2)
 
         lags, correls = xcorr(vels[..., 1], vels[..., 0], maxlags=120)
 
-        plt.plot(lags, correls.mean(axis=0))
-    plt.xlabel("Lag")
-    plt.ylabel("Correlation")
-    plt.title("Cross-Correlation between Velocity Signals")
+        ax[0].plot(lags, correls.mean(axis=0))
+        ax
+
+        model = IndependentObservationMultisensoryDelayModel(
+            delays=delays,
+            sigma_target=sigma_target,
+            sigmas_cursor=[sigma_prop, sigma],
+            action_cost=1e-3,
+        )
+
+        x = model.simulate(random.PRNGKey(0), n=100)
+
+        vels = jnp.diff(x, axis=-2)
+
+        lags, correls = xcorr(vels[..., 1], vels[..., 0], maxlags=120)
+
+        ax[1].plot(lags, correls.mean(axis=0))
+
+    ax[0].set_xlabel("Lag")
+    ax[1].set_xlabel("Lag")
+    ax[0].set_ylabel("Correlation")
     plt.show()
