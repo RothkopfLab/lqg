@@ -172,7 +172,13 @@ class System:
                         K @ self.dynamics.F @ self.dynamics.A,
                         self.actor.A
                         + self.actor.B @ gains.L
-                        - K @ self.actor.F @ self.actor.A,
+                        - K @ self.actor.F @ self.actor.A
+                        + K
+                        @ (
+                            self.dynamics.F @ self.dynamics.B
+                            - self.actor.F @ self.actor.B
+                        )
+                        @ gains.L,
                     ],
                     axis=-1,
                 ),
