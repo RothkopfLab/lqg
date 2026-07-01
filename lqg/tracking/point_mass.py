@@ -11,7 +11,7 @@ class PointMassBoundedActor(System):
         action_variability=1e-3,
         sigma_target=6.0,
         sigma_cursor=6.0,
-        action_cost=.01,
+        action_cost=0.01,
         dt=1.0 / 60.0,
         T=1000,
         damping=0.1,
@@ -40,7 +40,7 @@ class PointMassBoundedActor(System):
                 )
             ]
         )  # cost on distance between cursor and target, no cost on velocity or muscle activation
-        R = jnp.eye(B.shape[1]) * action_cost
+        R = jnp.eye(B.shape[1]) * action_cost * dt
 
         spec = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
@@ -119,9 +119,9 @@ def point_mass_dynamics_matrices(damping, m, tau, action_variability, dt):
 
     # discretize dynamics
     A, B = discretize_linear_system(A_c, B_c, dt)
-    # discretize noise model using van Loan's method, which accounts for the effect of the control input on the noise covariance (makes fitting more stable)
+    # discretize noise model using van Loan's method (makes fitting more stable)
     V = linalg.cholesky(
-        make_psd(van_loan_discretization(A_c, action_variability * B_c, dt))
+        make_psd(van_loan_discretization(A_c, 1e-2 * action_variability * B_c, dt))
     )
 
     return A, B, V
@@ -149,17 +149,16 @@ if __name__ == "__main__":
     from jax import random
 
     # setup model and simulate data
-    model = PointMassBoundedActor(
-        T=500,
-        action_cost=1e-5
-    )
+    dt = 1 / 60.0
+    T = int(10 / dt)
+    model = PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.5)
     print(model.actor.V[0])
 
     x = model.simulate(random.PRNGKey(0), n=20)
 
     # visualize trajectories
-    plt.plot(x[0, :, 0])
-    plt.plot(x[0, :, 1])
+    plt.plot(jnp.arange(T + 1) * dt, x[0, :, 0])
+    plt.plot(jnp.arange(T + 1) * dt, x[0, :, 1])
     plt.xlabel("time")
     plt.ylabel("position")
     plt.show()

@@ -31,7 +31,7 @@ def lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60, **fixed_params):
 
     lqg = model_type(process_noise=process_noise, dt=dt, T=T - 1, **params)
 
-    numpyro.sample("x", lqg.to_numpyro(), obs=x)
+    numpyro.sample("x", lqg.to_numpyro(xdim=d), obs=x)
 
 
 def common_lqg_model(x, model_type, process_noise=1.0, dt=1.0 / 60.0, **fixed_params):

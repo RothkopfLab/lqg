@@ -15,7 +15,9 @@ from lqg.infer.utils import sample_from_prior
 def parse_args():
     parser = argparse.ArgumentParser(description="Coverage runs")
     parser.add_argument("--ntrial", type=int, default=20, help="Number of trials .")
-    parser.add_argument("--seed", type=int, default=42, help="Seed for the simulation")
+    parser.add_argument(
+        "--seed", type=int, default=7432, help="Seed for the simulation"
+    )
     parser.add_argument("--time", type=int, default=720, help="Time steps per trial")
     parser.add_argument(
         "--nsamp", type=int, default=5_000, help="Number of samples drawn by NUTS"
@@ -25,7 +27,10 @@ def parse_args():
     )
     parser.add_argument("--nchain", type=int, default=4, help="Number of chains.")
     parser.add_argument(
-        "--model", type=str, default="BoundedActor", help="Model type (lqg.tracking)"
+        "--model",
+        type=str,
+        default="BoundedActor",
+        help="Model type (lqg.tracking)",
     )
     parser.add_argument("--plot", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--save", action=argparse.BooleanOptionalAction)
@@ -38,11 +43,12 @@ if __name__ == "__main__":
     Model = getattr(tracking, args.model)
 
     params = sample_from_prior(Model, args.seed)
+    print(params)
 
     # setup model and simulate data
     model = Model(T=args.time, **params)
 
-    x = model.simulate(random.PRNGKey(args.seed), n=args.ntrial)
+    x = model.simulate(random.PRNGKey(args.seed), n=args.ntrial)[..., :2]
 
     if args.plot:
         # visualize trajectories
@@ -63,13 +69,14 @@ if __name__ == "__main__":
     mcmc.run(random.PRNGKey(args.seed), x, Model)
 
     idata = az.from_numpyro(mcmc)
+    summary = az.summary(idata)
+    print(summary)
 
     if args.plot:
         az.plot_pair(idata)
         plt.show()
 
     if args.save:
-        summary = az.summary(idata)
         for key in params:
             summary.loc[key, "true"] = params[key]
             summary[key] = params[key]
