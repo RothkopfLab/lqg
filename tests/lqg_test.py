@@ -1,9 +1,16 @@
+import pytest
 import jax.numpy as jnp
 from jax import random
 
 from lqg.system import LQG
 
-from lqg.tracking import BoundedActor, SubjectiveActor
+from lqg.tracking import (
+    BoundedActor,
+    SubjectiveActor,
+    PointMassBoundedActor,
+    OptimalActor,
+    RelativeObservationBoundedActor,
+)
 
 
 def test_lqg_simulate():
@@ -34,6 +41,29 @@ def test_lqg_simulate():
 
     # simply check that it ran through
     assert x.shape == (10, T + 1, 2)
+
+
+@pytest.mark.parametrize(
+    ("model_class"),
+    [
+        BoundedActor,
+        SubjectiveActor,
+        PointMassBoundedActor,
+        OptimalActor,
+        RelativeObservationBoundedActor,
+    ],
+)
+def test_model(model_class):
+    """Test that simulation works for all models."""
+
+    T = 500
+    lqg = model_class(T=T)
+
+    x = lqg.simulate(random.PRNGKey(0), x0=jnp.zeros(lqg.xdim), n=10)
+
+    # simply check that it ran through
+    assert x.shape == (10, T + 1, lqg.xdim)
+    assert not jnp.isnan(x).any()
 
 
 def test_simulate_subjective():

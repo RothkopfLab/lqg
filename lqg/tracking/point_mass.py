@@ -154,7 +154,7 @@ if __name__ == "__main__":
     model = PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.5)
     print(model.actor.V[0])
 
-    x = model.simulate(random.PRNGKey(0), n=20)
+    x = model.simulate(random.PRNGKey(0), x0=jnp.zeros(model.xdim), n=20)
 
     # visualize trajectories
     plt.plot(jnp.arange(T + 1) * dt, x[0, :, 0])
