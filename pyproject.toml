@@ -1,6 +1,6 @@
 [project]
 name = "lqg"
-version = "0.2.12"
+version = "0.2.13"
 description = "(Inverse) optimal control for linear-quadratic Gaussian systems"
 authors = [{ name = "Dominik Straub", email = "dominikstrb@mailbox.org" }]
 requires-python = ">=3.10"
