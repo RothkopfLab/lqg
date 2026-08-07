@@ -139,7 +139,7 @@ class System:
         else:
             return x
 
-    def conditional_moments(self, x, Sigma0=None):
+    def conditional_moments(self, x, x0=None, xhat0=None, Sigma0=None):
         """Conditional distribution p(x | theta)
 
         Args:
@@ -207,8 +207,13 @@ class System:
         )
 
         # initialize p(x_t, xhat_t | x_{1:t-1})
-        # TODO: initialization should not always be zero for the unobserved dims
-        mu0 = jnp.hstack([x[0], jnp.zeros(xdim - obs_dim + bdim)])
+        if x0 is None:
+            x0 = x[0]
+        if xhat0 is None:
+            xhat0 = x0
+        mu0 = jnp.hstack(
+            [x0, jnp.zeros(xdim - x0.shape[0]), xhat0, jnp.zeros(bdim - xhat0.shape[0])]
+        )
         Sigma0 = G[0] @ G[0].T
 
         def scan_fn(carry, step):
@@ -234,18 +239,20 @@ class System:
         # return jnp.vstack((mu0, mu)), jnp.vstack((Sigma0[jnp.newaxis], Sigma))
         return mu, Sigma
 
-    def conditional_distribution(self, x, Sigma0=None):
+    def conditional_distribution(self, x, x0=None, xhat0=None, Sigma0=None):
         n, T, d = x.shape
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
-        mu, Sigma = vmap(self.conditional_moments, in_axes=(0, None))(x, Sigma0)
+        mu, Sigma = vmap(self.conditional_moments, in_axes=(0, 0, 0, None))(
+            x, x0, xhat0, Sigma0
+        )
 
         # marginalize out xhat by using only those entries of mu and Sigma that correspond to x
         return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, :, :d, :d]).to_event(1)
 
-    def log_likelihood(self, x, Sigma0=None):
+    def log_likelihood(self, x, x0=None, xhat0=None, Sigma0=None):
         # log likelihood of the states at time t+1 given all previous states up to time t
-        return self.conditional_distribution(x, Sigma0=Sigma0).log_prob(x[:, 1:])
+        return self.conditional_distribution(x, x0=x0, xhat0=xhat0, Sigma0=Sigma0).log_prob(x[:, 1:])
 
     def belief_tracking_distribution(self, x, Sigma0=None):
         d = self.xdim
