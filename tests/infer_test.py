@@ -26,6 +26,16 @@ def test_lqg_likelihood():
     assert model.log_likelihood(x).all()
 
 
+def test_lqg_likelihood_with_initial_state():
+    """Check that likelihood works with different given initial state."""
+
+    model = BoundedActor(T=500)
+
+    x = model.simulate(random.PRNGKey(123), n=20)
+
+    assert model.log_likelihood(x, x0=jnp.zeros((x.shape[0], 1))).all()
+
+
 def test_numpyro_distribution():
     """Test that conversion to numpyro model runs."""
 
