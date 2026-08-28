@@ -2,6 +2,7 @@ import jax.numpy as jnp
 from jax.scipy import linalg
 from lqg import System
 from lqg.spec import LQGSpec
+from lqg.tracking.point_mass import point_mass_dynamics_matrices
 from lqg.utils import time_stack_spec
 
 
@@ -112,15 +113,64 @@ class MultisensoryBoundedActor(System):
         super().__init__(actor=spec, dynamics=spec)
 
 
+class MultisensoryPointMassBoundedActor(System):
+    def __init__(
+        self,
+        process_noise=1.0,
+        sigmas=None,
+        action_variability=0.5,
+        action_cost=0.1,
+        damping=0.0015,
+        m=1.0,
+        tau=0.066,
+        dt=0.075,
+        delays=None,
+        T=1000,
+    ):
+
+        if delays is None:
+            delays = [1, 1]
+        if sigmas is None:
+            sigmas = [1.0, 1.0]
+
+        A, B, V = point_mass_dynamics_matrices(damping, m, tau, action_variability, dt)
+
+        A = linalg.block_diag(jnp.eye(1), A)
+        B = jnp.vstack([jnp.zeros((1, 1)), B])
+        V = linalg.block_diag(jnp.diag(jnp.array([process_noise])), V)
+
+        F = jnp.array([[1.0, -1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]])
+        Q = 500.0 * jnp.array(
+            [
+                [1.0, -1.0, 0.0, 0.0],
+                [-1.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ]
+        )
+        R = B.T @ B * jnp.array([[action_cost]])
+
+        spec = multisensory_delay_system(
+            A,
+            B,
+            V,
+            [F for _ in sigmas],
+            [sigma * jnp.eye(2) for sigma in sigmas],
+            Q,
+            R,
+            delays=delays,
+            T=T,
+        )
+        super().__init__(actor=spec, dynamics=spec)
+
+
 if __name__ == "__main__":
     from jax import random
     from lqg import xcorr
     import matplotlib.pyplot as plt
 
-    model = MultisensoryBoundedActor()
-
     for delays in [[0, 0], [0, 12], [12, 0], [12, 12]]:
-        model = MultisensoryBoundedActor(delays=delays, sigmas=[10.0, 20.0])
+        model = MultisensoryPointMassBoundedActor(delays=delays, sigmas=[10.0, 20.0])
         x = model.simulate(rng_key=random.PRNGKey(0), n=20)
 
         vels = jnp.diff(x, axis=-2)

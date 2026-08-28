@@ -1,7 +1,9 @@
 import jax.numpy as jnp
+import pytest
 from jax import random
 from lqg.tracking.multisensory import (
     MultisensoryBoundedActor,
+    MultisensoryPointMassBoundedActor,
     multisensory_delay_system,
 )
 from lqg import System
@@ -31,12 +33,16 @@ def test_delayed_multisensory_system():
     assert x.shape == (10, 501, (max(delays) + 1) * A.shape[-1])
 
 
-def test_multisensory_model():
+
+@pytest.mark.parametrize(
+    "actor_class", [MultisensoryBoundedActor, MultisensoryPointMassBoundedActor]
+)
+def test_multisensory_model(actor_class):
 
     # get CCG peak for different delays
     peaks = []
     for delays in [[0, 12], [12, 12]]:
-        model = MultisensoryBoundedActor(delays=delays, sigmas=[10.0, 10.0])
+        model = actor_class(delays=delays, sigmas=[10.0, 10.0])
         x = model.simulate(rng_key=random.PRNGKey(0), n=20)
 
         vels = jnp.diff(x, axis=-2)
