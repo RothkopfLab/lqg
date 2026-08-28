@@ -1,7 +1,11 @@
 import jax.numpy as jnp
 from jax import random
-from lqg.tracking.multisensory import multisensory_delay_system
+from lqg.tracking.multisensory import (
+    MultisensoryBoundedActor,
+    multisensory_delay_system,
+)
 from lqg import System
+from lqg import xcorr
 
 
 def test_delayed_multisensory_system():
@@ -25,3 +29,20 @@ def test_delayed_multisensory_system():
 
     # check that the shape of the state vector including delays is correct
     assert x.shape == (10, 501, (max(delays) + 1) * A.shape[-1])
+
+
+def test_multisensory_model():
+
+    # get CCG peak for different delays
+    peaks = []
+    for delays in [[0, 12], [12, 12]]:
+        model = MultisensoryBoundedActor(delays=delays, sigmas=[10.0, 10.0])
+        x = model.simulate(rng_key=random.PRNGKey(0), n=20)
+
+        vels = jnp.diff(x, axis=-2)
+        lags, correls = xcorr(vels[..., 1], vels[..., 0])
+        peaks.append(correls.mean(axis=0).argmax())
+
+    # check that the system in which both modalities are delayed 
+    # has a later peak than the one in which only one is delayed
+    assert peaks[0] < peaks[1]

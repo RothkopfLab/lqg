@@ -72,3 +72,59 @@ def multisensory_delay_system(A, B, V, Fs, Ws, Q, R, delays=None, T=500) -> LQGS
     spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
     return spec
+
+
+class MultisensoryBoundedActor(System):
+    def __init__(
+        self,
+        process_noise=1.0,
+        sigmas=None,
+        action_variability=0.5,
+        action_cost=0.1,
+        dt=0.075,
+        delays=None,
+        T=1000,
+    ):
+
+        if sigmas is None:
+            sigmas = [1.0, 1.0]
+        if delays is None:
+            delays = [1, 1]
+
+        A = jnp.eye(2)
+        B = dt * jnp.array([[0.0], [1.0]])
+        F = jnp.array([[1.0, -1.0]])
+        V = jnp.diag(jnp.array([process_noise, action_variability]))
+        Q = jnp.array([[1.0, -1.0], [-1.0, 1.0]])
+        R = jnp.array([[action_cost]])
+
+        spec = multisensory_delay_system(
+            A,
+            B,
+            V,
+            [F for _ in sigmas],
+            [jnp.diag(jnp.array([sigma])) for sigma in sigmas],
+            Q,
+            R,
+            delays=delays,
+            T=T,
+        )
+        super().__init__(actor=spec, dynamics=spec)
+
+
+if __name__ == "__main__":
+    from jax import random
+    from lqg import xcorr
+    import matplotlib.pyplot as plt
+
+    model = MultisensoryBoundedActor()
+
+    for delays in [[0, 0], [0, 12], [12, 0], [12, 12]]:
+        model = MultisensoryBoundedActor(delays=delays, sigmas=[10.0, 20.0])
+        x = model.simulate(rng_key=random.PRNGKey(0), n=20)
+
+        vels = jnp.diff(x, axis=-2)
+        lags, correls = xcorr(vels[..., 1], vels[..., 0])
+        plt.plot(lags, correls.mean(axis=0), label=f"delays={delays}")
+    plt.legend()
+    plt.show()
