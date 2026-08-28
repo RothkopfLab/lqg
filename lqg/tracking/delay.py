@@ -2,11 +2,12 @@ from jax import numpy as jnp
 from jax.scipy import linalg
 
 from lqg.spec import LQGSpec
-from lqg.system import System, Dynamics, Actor
+from lqg.system import System
 from lqg.tracking.subjective import SubjectiveActor
 
 
 def delay_system(spec, delay):
+    # TODO: multisensory_delay_system is a generalized version of this function, so we should probably merge them at some point
     T = spec.A.shape[0]
     d = spec.A.shape[1]
 
@@ -22,7 +23,6 @@ def delay_system(spec, delay):
 
     state_dim = Q.shape[1]
     action_dim = spec.R.shape[1]
-    obs_dim = spec.W.shape[1]
 
     q = jnp.zeros((T, state_dim))
     Qf = Q[-1]
