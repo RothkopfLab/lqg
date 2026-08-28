@@ -139,6 +139,82 @@ class System:
         else:
             return x
 
+    def simulate_actions(
+        self, x, action_dim_mask, rng_key, xhat0=None, Sigma0=None, return_all=False
+    ):
+        """Simulate cursor actions given pre-existing experimental target trajectories.
+
+        Args:
+            x (jnp.array): Experimental state data of shape (n, T+1, xdim)
+            action_dim_mask (jnp.array): Boolean mask for cursor/action state dimensions
+            rng_key (jax.random.PRNGKey): Random number generator key
+            xhat0 (jnp.array, optional): Initial belief state
+            return_all (bool): Whether to return intermediate estimates, controls, and obs
+
+        Returns:
+            jnp.array: Re-simulated state trajectories of shape (n, T+1, xdim)
+        """
+        Sigma0 = self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0
+
+        gains = lqr.backward(self.actor)
+        K = kf.forward(self.actor, Sigma0=Sigma0)
+
+        def simulate_trial_actions(x_single, action_dim_mask, rng_key, xhat0=None):
+            # 1. Initial state at t=0 comes directly from experimental data x_single[0]
+            x0 = x_single[0]
+            xhat0 = jnp.zeros(self.bdim) if xhat0 is None else xhat0
+
+            # Generate standard normal noise terms
+            rng_key, subkey = random.split(rng_key)
+            epsilon = random.normal(subkey, shape=(self.T, self.xdim))
+            rng_key, subkey = random.split(rng_key)
+            eta = random.normal(subkey, shape=(self.T, self.ydim))
+
+            def loop(carry, t):
+                x_curr, x_hat = carry  # x_curr is a 1D state vector of shape (xdim,)
+
+                # Compute control based on agent's current belief
+                u = gains.L[t] @ x_hat + gains.l[t]
+
+                # Apply full dynamics transition: A[t] @ x_curr carries state & physics forward
+                x_next_sim = (
+                    self.dynamics.A[t] @ x_curr
+                    + self.dynamics.B[t] @ u
+                    + self.dynamics.V[t] @ epsilon[t]
+                )
+
+                # Splicing: Take fixed experimental target state for t+1, 
+                # but inject newly simulated cursor/action states
+                x_next = x_single[t + 1].at[action_dim_mask].set(x_next_sim[action_dim_mask])
+
+                # Generate observation based on updated state x_next
+                y = self.dynamics.F[t] @ x_next + self.dynamics.W[t] @ eta[t]
+
+                # Update agent's belief
+                x_pred = self.actor.A[t] @ x_hat + self.actor.B[t] @ u
+                x_hat = x_pred + K[t] @ (y - self.actor.F[t] @ x_pred)
+
+                return (x_next, x_hat), (x_next, x_hat, y, u)
+
+            # Run scan across T time steps
+            _, (x_steps, x_hat, y, u) = scan(loop, (x0, xhat0), jnp.arange(self.T))
+
+            # Combine initial state x0 with simulated sequence -> shape (T+1, xdim)
+            x_full = jnp.vstack([x0, x_steps])
+
+            return x_full, jnp.vstack([xhat0, x_hat]), y, u
+
+        # Map across trials and random keys
+        keys = random.split(rng_key, num=x.shape[0])
+        x_sim, x_hat, y, u = vmap(
+            lambda x_i, key: simulate_trial_actions(x_i, action_dim_mask, key, xhat0=xhat0)
+        )(x, keys)
+
+        if return_all:
+            return x_sim, x_hat, y, u
+        else:
+            return x_sim
+
     def conditional_moments(self, x, x0=None, xhat0=None, Sigma0=None):
         """Conditional distribution p(x | theta)
 
