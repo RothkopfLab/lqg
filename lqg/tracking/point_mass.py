@@ -14,9 +14,9 @@ class PointMassBoundedActor(System):
         action_cost=0.01,
         dt=1.0 / 60.0,
         T=1000,
-        damping=0.1,
+        damping=0.0,
         m=1.0,
-        tau=0.0015,
+        tau=0.066,
     ):
         A, B, V = point_mass_dynamics_matrices(
             damping=damping, m=m, tau=tau, action_variability=action_variability, dt=dt
@@ -121,7 +121,7 @@ def point_mass_dynamics_matrices(damping, m, tau, action_variability, dt):
     A, B = discretize_linear_system(A_c, B_c, dt)
     # discretize noise model using van Loan's method (makes fitting more stable)
     V = linalg.cholesky(
-        make_psd(van_loan_discretization(A_c, 1e-2 * action_variability * B_c, dt))
+        make_psd(van_loan_discretization(A_c, action_variability * B_c, dt))
     )
 
     return A, B, V
@@ -148,17 +148,46 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from jax import random
 
+    from lqg import xcorr
+    from lqg.tracking import BoundedActor
+
     # setup model and simulate data
     dt = 1 / 60.0
-    T = int(10 / dt)
-    model = PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.5)
+    T = int(5 / dt)
+    model = PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.25)
     print(model.actor.V[0])
+    x = model.simulate(random.PRNGKey(0), x0=jnp.zeros(model.xdim), n=50)
 
-    x = model.simulate(random.PRNGKey(0), x0=jnp.zeros(model.xdim), n=20)
+    for i, model in enumerate(
+        [
+            PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.5),
+            BoundedActor(T=T, action_cost=0.01, action_variability=0.5),
+        ]
+    ):
+        f, ax = plt.subplots(1, 2, figsize=(10, 4))
+        dim_mask = (
+            jnp.array([0, 1], dtype=bool)
+            if isinstance(model, BoundedActor)
+            else jnp.array([0, 1, 1, 1], dtype=bool)
+        )
 
-    # visualize trajectories
-    plt.plot(jnp.arange(T + 1) * dt, x[0, :, 0])
-    plt.plot(jnp.arange(T + 1) * dt, x[0, :, 1])
-    plt.xlabel("time")
-    plt.ylabel("position")
-    plt.show()
+        x_sim = model.simulate_actions(
+            x[..., : model.xdim], action_dim_mask=dim_mask, rng_key=random.PRNGKey(0)
+        )
+
+        velocities = jnp.diff(x_sim, axis=-2)
+        lags, correls = xcorr(velocities[..., 1], velocities[..., 0], maxlags=60)
+
+        # visualize trajectories
+        ax[0].plot(jnp.arange(T + 1) * dt, x[0, :, 0])
+
+        ax[0].plot(jnp.arange(T + 1) * dt, x_sim[0, :, 1])
+        ax[0].set_xlabel("time")
+        ax[0].set_ylabel("position")
+
+        ax[1].plot(lags[60:] * dt, correls.mean(axis=0)[60:])
+        ax[1].set_xlabel("lag (s)")
+        ax[1].set_ylabel("cross-correlation")
+
+        f.tight_layout()
+        plt.show()
