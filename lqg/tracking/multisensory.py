@@ -177,118 +177,23 @@ class MultisensoryModel(System):
         super().__init__(actor=spec, dynamics=spec)
 
 
-class MultisensoryBoundedActor(System):
-    def __init__(
-        self,
-        process_noise=1.0,
-        sigma_target=1.0,
-        sigmas_cursor=None,
-        action_variability=0.5,
-        action_cost=0.1,
-        dt=1.0 / 60.0,
-        delays=None,
-        T=1000,
-    ):
-
-        if sigmas_cursor is None:
-            sigmas_cursor = [1.0, 1.0]
-        if delays is None:
-            delays = [6, 12]
-
-        A = jnp.eye(2)
-        B = dt * jnp.array([[0.0], [1.0]])
-        F_target = jnp.array([[1.0, 0.0]])
-        F_cursor = jnp.array([[0.0, 1.0]])
-        V = jnp.diag(jnp.array([process_noise, action_variability]))
-        Q = jnp.array([[1.0, -1.0], [-1.0, 1.0]])
-        R = jnp.array([[action_cost]])
-
-        spec = multisensory_delay_system(
-            A,
-            B,
-            V,
-            [F_target] + [F_cursor for _ in sigmas_cursor],
-            [jnp.array([[sigma_target]])]
-            + [jnp.array([[sigma_cursor]]) for sigma_cursor in sigmas_cursor],
-            Q,
-            R,
-            delays=delays,
-            T=T,
-        )
-        super().__init__(actor=spec, dynamics=spec)
-
-
-class MultisensoryPointMassBoundedActor(System):
-    def __init__(
-        self,
-        process_noise=1.0,
-        sigma_target=1.0,
-        sigmas_cursor=None,
-        action_variability=0.5,
-        action_cost=0.1,
-        damping=0.0,
-        m=1.0,
-        tau=0.066,
-        dt=1.0 / 60.0,
-        delays=None,
-        T=1000,
-    ):
-
-        if delays is None:
-            delays = [6, 12]
-        if sigmas_cursor is None:
-            sigmas_cursor = [1.0, 1.0]
-
-        A, B, V = point_mass_dynamics_matrices(damping, m, tau, action_variability, dt)
-
-        A = linalg.block_diag(jnp.eye(1), A)
-        B = jnp.vstack([jnp.zeros((1, 1)), B])
-        V = linalg.block_diag(jnp.diag(jnp.array([process_noise])), V)
-
-        F_target = jnp.array([[1.0, 0.0, 0.0, 0.0]])
-        F_cursor = jnp.array([[0.0, 1.0, 0.0, 0.0]])
-        Q = 500.0 * jnp.array(
-            [
-                [1.0, -1.0, 0.0, 0.0],
-                [-1.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0],
-            ]
-        )
-        R = B.T @ B * jnp.array([[action_cost]])
-
-        spec = multisensory_delay_system(
-            A,
-            B,
-            V,
-            [F_target] + [F_cursor for _ in sigmas_cursor],
-            [jnp.array([[sigma_target]])]
-            + [jnp.diag(jnp.array([sigma_cursor])) for sigma_cursor in sigmas_cursor],
-            Q,
-            R,
-            delays=delays,
-            T=T,
-        )
-        super().__init__(actor=spec, dynamics=spec)
-
-
 if __name__ == "__main__":
     from jax import random
     from lqg import xcorr
     import matplotlib.pyplot as plt
     import numpy as np
 
-    delays = {"vis": 6, "prop": 3}
+    delays = {"vis": 12, "prop": 6}
 
     dt = 1 / 120.0
     T = 2380
     rw_std = 0.5 * np.sqrt(dt) * 60
 
-    sigmas = {"low": 40.0, "mid": 80.0, "high": 160.0}
+    sigmas = {"low": 40.0, "mid": 80.0, "high": 120.0}
     sigma_dot = 40.0
-    sigma_prop = 10.0
+    sigma_prop = 40.0
 
-    dynamics = "point_mass"
+    dynamics = "velocity"
     observation = "relative"
 
     fig, ax = plt.subplots(1, 2, figsize=(6, 4), sharey=True, constrained_layout=True)
