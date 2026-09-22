@@ -19,6 +19,7 @@ dependencies = [
     "numpyro>=0.12.1",
     "matplotlib>=3.2.2",
     "arviz>=0.16.1",
+    "pre-commit>=4.6.2",
 ]
 
 [dependency-groups]
