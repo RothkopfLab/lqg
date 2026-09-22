@@ -19,26 +19,34 @@ dependencies = [
     "numpyro>=0.12.1",
     "matplotlib>=3.2.2",
     "arviz>=0.16.1",
-    "pre-commit>=4.6.2",
-    "pytest-cov>=7.1.0",
+    "numpy>=2.2.6",
+    "scipy>=1.15.3",
+    "ipywidgets>=8.1.8",
 ]
 
 [dependency-groups]
 dev = [
+    "deptry>=0.25.1",
     "jupyter>=1.0.0,<2",
     "pytest>=7.4.4",
     "pytest-cov>=7.1.0",
+    "pre-commit>=4.6.2",
 ]
 docs = [
+    "altair>=6.2.2",
     "mkdocs>=1.6.1",
     "mkdocs-git-revision-date-localized-plugin>=1.6.0",
     "mkdocs-jupyter>=0.26.3",
     "mkdocs-material>=9.7.7",
+    "pandas>=2.3.3",
 ]
 test = []
 
 [tool.uv]
 default-groups = "all"
+
+[tool.deptry.per_rule_ignores]
+DEP004 = ["altair", "pandas"]
 
 [tool.uv.build-backend]
 module-root = ""
