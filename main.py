@@ -14,7 +14,7 @@ numpyro.set_host_device_count(4)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Coverage runs")
+    parser = argparse.ArgumentParser(description="Parameter recovery runs")
     parser.add_argument("--ntrial", type=int, default=20, help="Number of trials .")
     parser.add_argument(
         "--seed", type=int, default=7432, help="Seed for the simulation"
