@@ -17,6 +17,7 @@ classifiers = [
 dependencies = [
     "jax>=0.4.13",
     "numpyro>=0.12.1",
+    "optimistix>=0.0.10",
     "matplotlib>=3.2.2",
     "arviz>=0.16.1",
     "numpy>=2.2.6",

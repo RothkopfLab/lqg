@@ -3,6 +3,7 @@ from jax import random
 from numpyro import handlers
 
 from lqg.infer.utils import infer
+from lqg.infer.mle import max_likelihood
 from lqg.tracking import BoundedActor, SubjectiveActor
 
 
@@ -58,3 +59,27 @@ def test_numpyro_distribution():
     mcmc = infer(x, num_samples=10, num_warmup=10, model=BoundedActor)
 
     assert mcmc.get_samples() is not None
+
+
+def test_max_likelihood_recovers_parameters():
+    """Check that MLE recovers parameters from synthetic observations."""
+    true_params = dict(
+        action_cost=0.5,
+        action_variability=0.25,
+        sigma_target=8.0,
+        sigma_cursor=2.0,
+    )
+    model = BoundedActor(T=100, **true_params)
+    x = model.simulate(random.PRNGKey(7), n=100)
+
+    params = max_likelihood(
+        x,
+        max_steps=300,
+        sigma_target=true_params["sigma_target"],
+        sigma_cursor=true_params["sigma_cursor"],
+    )
+
+    assert jnp.isclose(params["action_cost"], true_params["action_cost"], atol=0.1)
+    assert jnp.isclose(
+        params["action_variability"], true_params["action_variability"], atol=0.02
+    )
