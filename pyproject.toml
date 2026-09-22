@@ -20,11 +20,16 @@ dependencies = [
     "matplotlib>=3.2.2",
     "arviz>=0.16.1",
     "pre-commit>=4.6.2",
+    "pytest-cov>=7.1.0",
 ]
 
 [dependency-groups]
-dev = ["jupyter>=1.0.0,<2"]
-test = ["pytest>=7.4.0,<8"]
+dev = [
+    "jupyter>=1.0.0,<2",
+    "pytest>=7.4.4",
+    "pytest-cov>=7.1.0",
+]
+test = []
 
 [tool.uv]
 default-groups = "all"

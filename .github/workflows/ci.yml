@@ -1,6 +1,6 @@
 # GitHub workflow to deploy MkDocs documentation to GitHub Pages
 
-name: ci 
+name: ci
 on:
   push:
     branches:
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # See https://github.com/timvink/mkdocs-git-revision-date-localized-plugin
+          fetch-depth: 0 # See https://github.com/timvink/mkdocs-git-revision-date-localized-plugin
       - name: Write YAML frontmatter in README
         run: "sed -i '1i ---\\nicon: octicons/home-16\\n---\\n' docs/README.md"
       - name: Configure Git Credentials
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
       - uses: actions/cache@v3
         with:
           key: mkdocs-material-${{ env.cache_id }}
@@ -33,8 +33,8 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install \
-               mkdocs-material \
-               mkdocs-git-revision-date-localized-plugin \
-               mkdocs-jupyter==0.24.7
+          mkdocs-material \
+          mkdocs-git-revision-date-localized-plugin \
+          mkdocs-jupyter==0.24.7
       # - run: pip install .[dev]
       - run: mkdocs gh-deploy --force

@@ -6,6 +6,7 @@ import scipy.io as spio
 # methods for properly reading matlab structs
 # taken from https://stackoverflow.com/a/8832212
 
+
 def loadmat(filename):
     """
     this function should be called instead of direct spio.loadmat
@@ -43,7 +44,7 @@ def _todict(matobj):
 
 
 def load_tracking_data(delay=12, clip=120, subtract_mean=True, data_path="data/"):
-    """ Load tracking data from Bonnen et al. (2015)
+    """Load tracking data from Bonnen et al. (2015)
 
     Args:
         delay: temporal delay between target and response
@@ -71,7 +72,7 @@ def load_tracking_data(delay=12, clip=120, subtract_mean=True, data_path="data/"
     # apply delay and clip the first couple of time steps
     if delay:
         target = target[:, clip:-delay]
-        mouse = mouse[:, clip + delay:]
+        mouse = mouse[:, clip + delay :]
     else:
         target = target[:, clip:]
         mouse = mouse[:, clip:]
@@ -84,10 +85,16 @@ def load_tracking_data(delay=12, clip=120, subtract_mean=True, data_path="data/"
 
     # stack data from all trials
     data = np.stack(
-        [np.array(
-            [target[np.where(sigma == blob_width)[0], :],
-             mouse[np.where(sigma == blob_width)[0], :]])
-            for blob_width in sigmas])
+        [
+            np.array(
+                [
+                    target[np.where(sigma == blob_width)[0], :],
+                    mouse[np.where(sigma == blob_width)[0], :],
+                ]
+            )
+            for blob_width in sigmas
+        ]
+    )
 
     # bring in right shape for our analysis methods
     data = data.transpose(0, 2, 3, 1)

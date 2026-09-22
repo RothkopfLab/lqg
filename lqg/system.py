@@ -107,7 +107,7 @@ class System:
                 x, x_hat = carry
 
                 # compute control based on agent's current belief
-                u = gains.L[t] @ x_hat + gains.l[t]
+                u = gains.L[t] @ x_hat + gains.k[t]
 
                 # apply dynamics
                 x = (
@@ -174,7 +174,7 @@ class System:
                 x_curr, x_hat = carry  # x_curr is a 1D state vector of shape (xdim,)
 
                 # Compute control based on agent's current belief
-                u = gains.L[t] @ x_hat + gains.l[t]
+                u = gains.L[t] @ x_hat + gains.k[t]
 
                 # Apply full dynamics transition: A[t] @ x_curr carries state & physics forward
                 x_next_sim = (
@@ -183,9 +183,11 @@ class System:
                     + self.dynamics.V[t] @ epsilon[t]
                 )
 
-                # Splicing: Take fixed experimental target state for t+1, 
+                # Splicing: Take fixed experimental target state for t+1,
                 # but inject newly simulated cursor/action states
-                x_next = x_single[t + 1].at[action_dim_mask].set(x_next_sim[action_dim_mask])
+                x_next = (
+                    x_single[t + 1].at[action_dim_mask].set(x_next_sim[action_dim_mask])
+                )
 
                 # Generate observation based on updated state x_next
                 y = self.dynamics.F[t] @ x_next + self.dynamics.W[t] @ eta[t]
@@ -207,7 +209,9 @@ class System:
         # Map across trials and random keys
         keys = random.split(rng_key, num=x.shape[0])
         x_sim, x_hat, y, u = vmap(
-            lambda x_i, key: simulate_trial_actions(x_i, action_dim_mask, key, xhat0=xhat0)
+            lambda x_i, key: simulate_trial_actions(
+                x_i, action_dim_mask, key, xhat0=xhat0
+            )
         )(x, keys)
 
         if return_all:
@@ -328,7 +332,9 @@ class System:
 
     def log_likelihood(self, x, x0=None, xhat0=None, Sigma0=None):
         # log likelihood of the states at time t+1 given all previous states up to time t
-        return self.conditional_distribution(x, x0=x0, xhat0=xhat0, Sigma0=Sigma0).log_prob(x[:, 1:])
+        return self.conditional_distribution(
+            x, x0=x0, xhat0=xhat0, Sigma0=Sigma0
+        ).log_prob(x[:, 1:])
 
     def belief_tracking_distribution(self, x, Sigma0=None):
         d = self.xdim
@@ -372,7 +378,7 @@ class System:
             )
 
             rows = ["\\begin{bmatrix}"]
-            rows += [" " + " & ".join(l.split()) + "\\\\" for l in lines]
+            rows += [" " + " & ".join(line.split()) + "\\\\" for line in lines]
             rows += ["\\end{bmatrix}"]
             bmatrix = "".join(rows)
             return bmatrix

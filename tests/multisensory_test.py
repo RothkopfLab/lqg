@@ -34,7 +34,6 @@ def test_delayed_multisensory_system():
 
 @pytest.mark.parametrize("actor_class", [MultisensoryModel])
 def test_multisensory_model(actor_class):
-
     # get CCG peak for different delays
     peaks = []
     for delays in [[0, 12], [12, 12]]:

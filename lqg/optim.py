@@ -1,6 +1,7 @@
 """
 A collection of helper functions for optimization with JAX.
 """
+
 import numpy as onp
 import scipy.optimize
 from jax import grad, jit
@@ -8,17 +9,20 @@ from jax.flatten_util import ravel_pytree
 
 from jax.config import config
 
-config.update('jax_enable_x64', True)
+config.update("jax_enable_x64", True)
 
 
-def minimize(fun, x0,
-             method=None,
-             args=(),
-             bounds=None,
-             constraints=(),
-             tol=None,
-             callback=None,
-             options=None):
+def minimize(
+    fun,
+    x0,
+    method=None,
+    args=(),
+    bounds=None,
+    constraints=(),
+    tol=None,
+    callback=None,
+    options=None,
+):
     """
     A simple wrapper for scipy.optimize.minimize using JAX.
 
@@ -153,16 +157,18 @@ def minimize(fun, x0,
             return callback(x, *args)
 
     # Minimize with scipy
-    results = scipy.optimize.minimize(fun_wrapper,
-                                      x0_flat,
-                                      args=args,
-                                      method=method,
-                                      jac=jac_wrapper,
-                                      callback=callback_wrapper,
-                                      bounds=bounds,
-                                      constraints=constraints,
-                                      tol=tol,
-                                      options=options)
+    results = scipy.optimize.minimize(
+        fun_wrapper,
+        x0_flat,
+        args=args,
+        method=method,
+        jac=jac_wrapper,
+        callback=callback_wrapper,
+        bounds=bounds,
+        constraints=constraints,
+        tol=tol,
+        options=options,
+    )
 
     # pack the output back into a PyTree
     results["x"] = unravel(results["x"])

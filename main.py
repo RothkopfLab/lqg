@@ -5,11 +5,12 @@ from numpyro.infer import NUTS, MCMC, init_to_median
 from jax import random
 import arviz as az
 
-numpyro.set_host_device_count(4)
 
 from lqg import tracking
 from lqg.infer.models import lifted_model
 from lqg.infer.utils import sample_from_prior
+
+numpyro.set_host_device_count(4)
 
 
 def parse_args():

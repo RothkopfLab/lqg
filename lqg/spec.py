@@ -3,7 +3,7 @@ import jax.numpy as jnp
 
 
 class LQGSpec(NamedTuple):
-    """ (generalized) LQG specification """
+    """(generalized) LQG specification"""
 
     Q: jnp.ndarray
     q: jnp.ndarray

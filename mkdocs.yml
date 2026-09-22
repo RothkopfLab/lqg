@@ -10,9 +10,9 @@ site_description: (Inverse) optimal control for linear-quadratic Gaussian system
 nav:
   - Home: README.md
   - Tutorials:
-    - tutorials/index.md
-    - Overview: tutorials/overview.ipynb
-    - Data: tutorials/data.ipynb
+      - tutorials/index.md
+      - Overview: tutorials/overview.ipynb
+      - Data: tutorials/data.ipynb
   - API: api.md
 
 # Material for MkDocs (https://squidfunk.github.io/mkdocs-material/)
@@ -22,7 +22,7 @@ theme:
     repo: octicons/mark-github-16
   logo: images/logo.png
   favicon: images/favicon.ico
-  
+
   features:
     - navigation.expand
     - navigation.indexes
@@ -58,9 +58,7 @@ markdown_extensions:
   - attr_list
   - md_in_html
   # For emojis
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.emoji
 
 plugins:
   # Search field

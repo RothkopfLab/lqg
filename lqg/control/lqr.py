@@ -9,7 +9,7 @@ class Gains(NamedTuple):
     """LQR control gains"""
 
     L: jnp.ndarray
-    l: jnp.ndarray
+    k: jnp.ndarray
     H: jnp.ndarray = None
 
 
@@ -25,18 +25,21 @@ def backward(spec: LQGSpec, eps: float = 1e-8) -> Gains:
 
         # Deal with negative eigenvals of H, see section 5.4.1 of Li's PhD thesis
         evals, _ = jnp.linalg.eigh(H)
-        Ht = H + jnp.maximum(0., eps - evals[0]) * jnp.eye(H.shape[0])
+        Ht = H + jnp.maximum(0.0, eps - evals[0]) * jnp.eye(H.shape[0])
 
         L = -jnp.linalg.solve(Ht, G)
-        l = -jnp.linalg.solve(Ht, g)
+        k = -jnp.linalg.solve(Ht, g)
 
         S = Q + A.T @ S @ A + L.T @ H @ L + L.T @ G + G.T @ L
-        s = q + A.T @ s + G.T @ l + L.T @ H @ l + L.T @ g
+        s = q + A.T @ s + G.T @ k + L.T @ H @ k + L.T @ g
 
-        return (S, s), (L, l, Ht)
+        return (S, s), (L, k, Ht)
 
-    _, (L, l, H) = lax.scan(loop, (spec.Qf, spec.qf),
-                            (spec.Q, spec.q, spec.P, spec.R, spec.r, spec.A, spec.B),
-                            reverse=True)
+    _, (L, k, H) = lax.scan(
+        loop,
+        (spec.Qf, spec.qf),
+        (spec.Q, spec.q, spec.P, spec.R, spec.r, spec.A, spec.B),
+        reverse=True,
+    )
 
-    return Gains(L=L, l=l, H=H)
+    return Gains(L=L, k=k, H=H)

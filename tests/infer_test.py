@@ -3,7 +3,6 @@ from jax import random
 from numpyro import handlers
 
 from lqg.infer.utils import infer
-from lqg.system import LQG
 from lqg.tracking import BoundedActor, SubjectiveActor
 
 

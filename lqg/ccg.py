@@ -4,7 +4,7 @@ from scipy.optimize import curve_fit
 
 
 def xcorr(x, y, maxlags=60, normed=True):
-    """ Compute cross correlation between two arrays along last axis of an array,
+    """Compute cross correlation between two arrays along last axis of an array,
     treating other axes as batch dimensions
 
     Args:
@@ -20,33 +20,37 @@ def xcorr(x, y, maxlags=60, normed=True):
     correls = fftconvolve(x, y[..., ::-1], mode="full", axes=-1)
 
     if normed:
-        correls = correls / np.sqrt(np.sum(x * x, axis=-1) * np.sum(y * y, axis=-1))[..., None]
+        correls = (
+            correls
+            / np.sqrt(np.sum(x * x, axis=-1) * np.sum(y * y, axis=-1))[..., None]
+        )
 
     if maxlags is None:
         maxlags = Nx - 1
 
     if maxlags >= Nx or maxlags < 1:
-        raise ValueError('maxlags must be None or strictly '
-                         'positive < %d' % Nx)
+        raise ValueError("maxlags must be None or strictly " "positive < %d" % Nx)
 
     lags = np.arange(-maxlags, maxlags + 1)
 
-    correls = correls[..., Nx - 1 - maxlags:Nx + maxlags]
+    correls = correls[..., Nx - 1 - maxlags : Nx + maxlags]
     return lags, correls
 
 
 def dog(x, a1, a2, mu1, mu2, sigma1, sigma2):
-    g = a1 / (sigma1 * np.sqrt(2 * np.pi)) * np.exp(-.5 * (x - mu1) ** 2 / sigma1 ** 2)
-    h = a2 / (sigma2 * np.sqrt(2 * np.pi)) * np.exp(-.5 * (x - mu2) ** 2 / sigma2 ** 2)
+    g = a1 / (sigma1 * np.sqrt(2 * np.pi)) * np.exp(-0.5 * (x - mu1) ** 2 / sigma1**2)
+    h = a2 / (sigma2 * np.sqrt(2 * np.pi)) * np.exp(-0.5 * (x - mu2) ** 2 / sigma2**2)
 
     return g - h
 
 
 def skewed_gabor(x, a, mu, sigma1, sigma2, w):
     # f = np.zeros_like(x)
-    f = (x >= mu) * a * np.exp(-.5 * (x - mu) ** 2 / sigma1 ** 2) * np.sin(2 * np.pi * w * (x - mu)) + (
-            x < mu) * a * np.exp(-.5 * (x - mu) ** 2 / sigma2 ** 2) * np.sin(
-        2 * np.pi * w * (x - mu))
+    f = (x >= mu) * a * np.exp(-0.5 * (x - mu) ** 2 / sigma1**2) * np.sin(
+        2 * np.pi * w * (x - mu)
+    ) + (x < mu) * a * np.exp(-0.5 * (x - mu) ** 2 / sigma2**2) * np.sin(
+        2 * np.pi * w * (x - mu)
+    )
 
     return f
 
@@ -54,11 +58,30 @@ def skewed_gabor(x, a, mu, sigma1, sigma2, w):
 def fit_dog(x, y):
     res = curve_fit(dog, x, y)
     params = res[0]
-    return dict(a1=params[0], a2=params[1], mu1=params[2], mu2=params[3], sigma1=params[4], sigma2=params[5])
+    return dict(
+        a1=params[0],
+        a2=params[1],
+        mu1=params[2],
+        mu2=params[3],
+        sigma1=params[4],
+        sigma2=params[5],
+    )
 
 
 def fit_skewed_gabor(x, y):
-    res = curve_fit(skewed_gabor, x, y, max_nfev=5000, p0=np.array([0.5, 1., 5., 2., 1.]), method="trf",
-                    bounds=(np.array([0., 0., .1, .1, .1]), np.array([1., 50., 50., 50., 5.])))
+    res = curve_fit(
+        skewed_gabor,
+        x,
+        y,
+        max_nfev=5000,
+        p0=np.array([0.5, 1.0, 5.0, 2.0, 1.0]),
+        method="trf",
+        bounds=(
+            np.array([0.0, 0.0, 0.1, 0.1, 0.1]),
+            np.array([1.0, 50.0, 50.0, 50.0, 5.0]),
+        ),
+    )
     params = res[0]
-    return dict(a=params[0], mu=params[1], sigma1=params[2], sigma2=params[3], w=params[4])
+    return dict(
+        a=params[0], mu=params[1], sigma1=params[2], sigma2=params[3], w=params[4]
+    )

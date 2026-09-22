@@ -91,7 +91,6 @@ class MultisensoryModel(System):
         T=500,
         dt=1.0 / 60.0,
     ):
-
         if dynamics == "point_mass":
             A, B, V = point_mass_dynamics_matrices(
                 damping=0.0,
@@ -183,9 +182,9 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import numpy as np
 
-    delays = {"vis": 12, "prop": 6}
+    delays = {"vis": 1, "prop": 0}
 
-    dt = 1 / 120.0
+    dt = 1 / 30.0
     T = 2380
     rw_std = 0.5 * np.sqrt(dt) * 60
 
@@ -194,7 +193,7 @@ if __name__ == "__main__":
     sigma_prop = 40.0
 
     dynamics = "velocity"
-    observation = "relative"
+    observation = "independent"
 
     fig, ax = plt.subplots(1, 2, figsize=(6, 4), sharey=True, constrained_layout=True)
 
@@ -226,7 +225,7 @@ if __name__ == "__main__":
             delay_prop=delays["prop"],
             dynamics=dynamics,
             observation=observation,
-            sigma_cursor_vis=sigma, 
+            sigma_cursor_vis=sigma,
             sigma_cursor_prop=sigma_prop,
             sigma_target=sigma_dot,
             action_cost=0.01,
