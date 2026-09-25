@@ -73,7 +73,9 @@ def test_max_likelihood_recovers_parameters():
     x = model.simulate(random.PRNGKey(7), n=100)
 
     params = max_likelihood(
-        x,
+        key=random.PRNGKey(7),
+        x=x,
+        model=BoundedActor,
         max_steps=300,
         sigma_target=true_params["sigma_target"],
         sigma_cursor=true_params["sigma_cursor"],
