@@ -10,73 +10,43 @@ class PointMassBoundedActor(System):
         process_noise=1.0,
         action_variability=1e-3,
         sigma_target=6.0,
-        sigma_cursor=6.0,
         action_cost=0.01,
         dt=1.0 / 60.0,
         T=1000,
-        damping=0.0,
         m=1.0,
         tau=0.066,
     ):
         A, B, V = point_mass_dynamics_matrices(
-            damping=damping, m=m, tau=tau, action_variability=action_variability, dt=dt
+            m=m, tau=tau, action_variability=action_variability, dt=dt
         )
         A = linalg.block_diag(jnp.eye(1), A)  # add target position as a constant state
         B = jnp.vstack([jnp.zeros((1, 1)), B])
         V = linalg.block_diag(jnp.diag(jnp.array([process_noise])), V)
 
-        F = jnp.eye(3, 4)  # full observation of position, no observation of velocity
-        W = jnp.diag(jnp.array([sigma_target, sigma_cursor, sigma_cursor]))
+        # observation of target position
+        F = jnp.eye(1, 4)
+        W = jnp.diag(jnp.array([sigma_target]))
 
-        Q = linalg.block_diag(
-            *[
-                jnp.array(
-                    [
-                        [1.0, -1.0, 0.0, 0.0],
-                        [-1.0, 1.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 0.0],
-                    ]
-                )
-            ]
+        Q = (
+            500.0
+            * linalg.block_diag(
+                *[
+                    jnp.array(
+                        [
+                            [1.0, -1.0, 0.0, 0.0],
+                            [-1.0, 1.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    )
+                ]
+            )
         )  # cost on distance between cursor and target, no cost on velocity or muscle activation
         R = jnp.eye(B.shape[1]) * action_cost * dt
 
         spec = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
         super().__init__(actor=spec, dynamics=spec)
-
-
-def discretize_linear_system(A, B, dt):
-    """
-    Discretize continuous-time system x' = A x + B u
-    using zero-order hold (exact method).
-
-    Args:
-        A: (n, n) array
-        B: (n, m) array
-        dt: scalar timestep
-
-    Returns:
-        Ad: (n, n) array
-        Bd: (n, m) array
-    """
-    n = A.shape[0]
-    m = B.shape[1]
-
-    # Construct block matrix
-    M = jnp.zeros((n + m, n + m))
-    M = M.at[:n, :n].set(A)
-    M = M.at[:n, n:].set(B)
-
-    # Matrix exponential
-    M_exp = linalg.expm(M * dt)
-
-    # Extract Ad and Bd
-    Ad = M_exp[:n, :n]
-    Bd = M_exp[:n, n:]
-
-    return Ad, Bd
 
 
 def van_loan_discretization(A, G, dt, Qc=None):
@@ -110,38 +80,22 @@ def van_loan_discretization(A, G, dt, Qc=None):
     return Qd
 
 
-def point_mass_dynamics_matrices(damping, m, tau, action_variability, dt):
-    # continuous-time dynamics of a point mass with viscous damping and a first-order muscle activation dynamics
-    A_c = jnp.array(
-        [[0.0, 1.0, 0.0], [0.0, -damping / m, 1.0 / m], [0.0, 0.0, -1.0 / tau]]
+def point_mass_dynamics_matrices(m, tau, action_variability, dt):
+    # continuous-time dynamics of a point mass with a first-order muscle activation dynamics
+    dtt = dt / (tau)
+    A = jnp.array(
+        [
+            [1.0, dt, 0.0],
+            [0.0, 1.0, dt / m],
+            [0.0, 0.0, 1 - dtt],
+        ]
     )
-    B_c = jnp.array([[0.0], [0.0], [1.0 / tau]])
+    B = jnp.array([[0.0], [0.0], [dtt]])
 
-    # discretize dynamics
-    A, B = discretize_linear_system(A_c, B_c, dt)
-    # discretize noise model using van Loan's method (makes fitting more stable)
-    V = linalg.cholesky(
-        make_psd(van_loan_discretization(A_c, action_variability * B_c, dt))
-    )
+    # B scaled by action_variability to represent variability in muscle activation
+    V = action_variability * jnp.diag(jnp.array([1e-3, 1e-3, dtt]))
 
     return A, B, V
-
-
-def make_psd(M, eps=1e-6):
-    """
-    Make a symmetric matrix positive semi-definite by adding a small value to the diagonal.
-
-    Args:
-        M: (n, n) array
-        eps: scalar, small value to add to the diagonal
-    Returns:
-        M_psd: (n, n) array, positive semi-definite version of M
-    """
-    M_sym = (M + M.T) / 2
-    eigvals, eigvecs = jnp.linalg.eigh(M_sym)
-    eigvals_clipped = jnp.clip(eigvals, min=eps)
-    M_psd = eigvecs @ jnp.diag(eigvals_clipped) @ eigvecs.T
-    return M_psd
 
 
 if __name__ == "__main__":
@@ -154,17 +108,21 @@ if __name__ == "__main__":
     # setup model and simulate data
     dt = 1 / 60.0
     T = int(5 / dt)
-    model = PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.25)
-    print(model.actor.V[0])
+    model = PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.25, dt=dt)
+    #
     x = model.simulate(random.PRNGKey(0), x0=jnp.zeros(model.xdim), n=50)
 
+    f, ax = plt.subplots(1, 2, figsize=(10, 4))
     for i, model in enumerate(
         [
-            PointMassBoundedActor(T=T, action_cost=0.01, action_variability=0.5),
-            BoundedActor(T=T, action_cost=0.01, action_variability=0.5),
+            PointMassBoundedActor(
+                T=T, action_cost=0.01, action_variability=0.5, tau=0.066
+            ),
+            PointMassBoundedActor(
+                T=T, action_cost=0.01, action_variability=0.5, tau=10.0
+            ),
         ]
     ):
-        f, ax = plt.subplots(1, 2, figsize=(10, 4))
         dim_mask = (
             jnp.array([0, 1], dtype=bool)
             if isinstance(model, BoundedActor)
@@ -189,5 +147,5 @@ if __name__ == "__main__":
         ax[1].set_xlabel("lag (s)")
         ax[1].set_ylabel("cross-correlation")
 
-        f.tight_layout()
-        plt.show()
+    f.tight_layout()
+    plt.show()
