@@ -2070,6 +2070,7 @@ dependencies = [
     { name = "optimistix", version = "0.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "tqdm" },
 ]
 
 [package.dev-dependencies]
@@ -2101,6 +2102,7 @@ requires-dist = [
     { name = "numpyro", specifier = ">=0.12.1" },
     { name = "optimistix", specifier = ">=0.0.10" },
     { name = "scipy", specifier = ">=1.15.3" },
+    { name = "tqdm", specifier = ">=4.67.3" },
 ]
 
 [package.metadata.requires-dev]

@@ -23,6 +23,7 @@ dependencies = [
     "numpy>=2.2.6",
     "scipy>=1.15.3",
     "ipywidgets>=8.1.8",
+    "tqdm>=4.67.3",
 ]
 
 [dependency-groups]
