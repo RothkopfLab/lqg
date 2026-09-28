@@ -64,7 +64,7 @@ def test_numpyro_distribution():
 def test_max_likelihood_recovers_parameters():
     """Check that MLE recovers parameters from synthetic observations."""
     true_params = dict(
-        action_cost=0.5,
+        action_cost=0.01,
         action_variability=0.25,
         sigma_target=8.0,
         sigma_cursor=2.0,
@@ -81,7 +81,7 @@ def test_max_likelihood_recovers_parameters():
         sigma_cursor=true_params["sigma_cursor"],
     )
 
-    assert jnp.isclose(params["action_cost"], true_params["action_cost"], atol=0.1)
+    assert jnp.isclose(params["action_cost"], true_params["action_cost"], atol=0.002)
     assert jnp.isclose(
         params["action_variability"], true_params["action_variability"], atol=0.02
     )
