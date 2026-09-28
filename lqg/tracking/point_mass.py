@@ -12,6 +12,8 @@ class PointMassBoundedActor(System):
         sigma_target=6.0,
         sigma_cursor=12.5,
         action_cost=0.01,
+        velocity_cost=0.01,
+        force_cost=0.01,
         dt=1.0 / 60.0,
         T=1000,
         tau=0.066,
@@ -27,22 +29,20 @@ class PointMassBoundedActor(System):
         F = jnp.eye(2, 4)
         W = jnp.diag(jnp.array([sigma_target, sigma_cursor]))
 
-        Q = (
-            10.0
-            * linalg.block_diag(
-                *[
-                    jnp.array(
-                        [
-                            [1.0, -1.0, 0.0, 0.0],
-                            [-1.0, 1.0, 0.0, 0.0],
-                            [0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.0, 0.0, 0.0],
-                        ]
-                    )
-                ]
-            )
-        )  # cost on distance between cursor and target, no cost on velocity or muscle activation
-        R = jnp.eye(B.shape[1]) * action_cost * dt
+        # cost on distance between cursor and target, no cost on velocity or muscle activation
+        Q = linalg.block_diag(
+            *[
+                jnp.array(
+                    [
+                        [1.0, -1.0, 0.0, 0.0],
+                        [-1.0, 1.0, 0.0, 0.0],
+                        [0.0, 0.0, velocity_cost, 0.0],
+                        [0.0, 0.0, 0.0, force_cost],
+                    ]
+                )
+            ]
+        )
+        R = jnp.eye(B.shape[1]) * action_cost
 
         spec = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 

@@ -3,32 +3,60 @@ import jax
 from jax import random
 import optimistix as optx
 from numpyro.infer.util import log_density
-from numpyro.distributions.transforms import SoftplusTransform
-
-from lqg.infer.utils import sample_from_prior
-
+import distrax
 
 from lqg.infer.models import get_model_params, lqg_model
 from lqg.tracking import BoundedActor
 
-params_constraints = {
-    "action_cost": SoftplusTransform(),
-    "sigma_target": SoftplusTransform(),
-    "action_variability": SoftplusTransform(),
-    "signal_dep_noise": SoftplusTransform(),
-    "sigma_cursor": SoftplusTransform(),
-    "sigma": SoftplusTransform(),
-    "subj_noise": SoftplusTransform(),
-    "subj_vel_noise": SoftplusTransform(),
-    "m": SoftplusTransform(),
-    "tau": SoftplusTransform(),
+
+class Box(distrax.Chain):
+    def __init__(self, low=0.0, high=1.0):
+        bijectors = [
+            distrax.ScalarAffine(shift=low, scale=(high - low)),
+            distrax.Sigmoid(),
+        ]
+        super().__init__(bijectors)
+
+
+class LogBox(distrax.Chain):
+    def __init__(self, low=0.0, high=1.0):
+        bijectors = [
+            distrax.Lambda(forward=lambda x: 10**x, inverse=jnp.log10),
+            distrax.ScalarAffine(
+                shift=jnp.log10(low), scale=(jnp.log10(high) - jnp.log10(low))
+            ),
+            distrax.Sigmoid(),
+        ]
+        super().__init__(bijectors)
+
+
+default_constraints = {
+    "action_cost": LogBox(low=1e-7, high=1e-2),
+    "velocity_cost": LogBox(low=1e-4, high=1.0),
+    "force_cost": LogBox(low=1e-6, high=1e-1),
+    "sigma_target": Box(0.01, 100.0),
+    "action_variability": Box(low=0.01, high=2.0),
+    "sigma_cursor": Box(low=0.01, high=100.0),
+    "sigma": Box(low=0.01, high=100.0),
+    "subj_noise": Box(low=0.01, high=10.0),
+    "subj_vel_noise": Box(low=0.01, high=10.0),
 }
+
+
+def sample_within_bounds(key, param_name, constraints=None, shape=(), scale=1.0):
+    if constraints is None:
+        constraints = default_constraints
+    constraint = constraints[param_name]
+    unconstrained_sample = random.normal(key, shape) * scale
+    constrained_sample = constraint.forward(unconstrained_sample)
+    return constrained_sample
 
 
 def _log_likelihood(log_params, args):
     numpyro_fn, x, model, fixed = args
     params = {
-        name: params_constraints[name](value) for name, value in log_params.items()
+        name: default_constraints[name].forward(value)
+        for name, value in log_params.items()
     }
     params.update(fixed)
     return -log_density(
@@ -48,12 +76,22 @@ def max_likelihood(
     model=BoundedActor,
     numpyro_fn=lqg_model,
     max_steps=2_000,
+    constraints=None,
     **fixed,
 ):
+    if constraints is None:
+        constraints = default_constraints
+
     def _fit(key):
+        # sample initial parameters (in unconstrained space)
         initial_params = {
-            name: value
-            for name, value in sample_from_prior(model, seed=key).items()
+            name: random.normal(
+                subkey,
+                (),
+            )
+            for name, subkey in zip(
+                get_model_params(model), random.split(key, len(get_model_params(model)))
+            )
             if name not in fixed
         }
         solver = optx.LBFGS(rtol=1e-4, atol=1e-4)
@@ -66,7 +104,7 @@ def max_likelihood(
             throw=False,
         )
         params = {
-            name: params_constraints[name](value)
+            name: default_constraints[name].forward(value)
             for name, value in solution.value.items()
         }
         return params, solution.state.f_info.f
@@ -106,10 +144,14 @@ if __name__ == "__main__":
     for seed in tqdm(range(100)):
         # true_params sampled from prior
         true_params = {
-            name: value
-            for name, value in sample_from_prior(
-                PointMassBoundedActor, seed=seed
-            ).items()
+            name: sample_within_bounds(key, name, default_constraints)
+            for name, key in zip(
+                get_model_params(PointMassBoundedActor),
+                random.split(
+                    random.PRNGKey(seed),
+                    num=len(get_model_params(PointMassBoundedActor)),
+                ),
+            )
             if name not in fixed_params
         }
         print(f"True parameters: {true_params}")

@@ -17,6 +17,8 @@ default_prior = {
     "sigma_target_4": dist.HalfNormal(50.0),
     "sigma_target_5": dist.HalfNormal(50.0),
     "tau": dist.HalfNormal(0.1),
+    "velocity_cost": dist.LogNormal(-2.0, 1.0),
+    "force_cost": dist.LogNormal(-2.0, 1.0),
 }
 
 
