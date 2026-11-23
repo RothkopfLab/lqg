@@ -12,6 +12,6 @@ icon: octicons/book-16
 
 - :simple-jupyter:{ .lg .middle } **[Data](data.ipynb)**
 
-  Brief demonstration of tracking data evaluation.
+  Fitting models to tracking data with maximum likelihood estimation.
 
 </div>

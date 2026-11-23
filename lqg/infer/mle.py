@@ -52,11 +52,10 @@ def sample_within_bounds(key, param_name, constraints=None, shape=(), scale=1.0)
     return constrained_sample
 
 
-def _log_likelihood(log_params, args):
+def _log_likelihood(log_params, args, constraints):
     numpyro_fn, x, model, fixed = args
     params = {
-        name: default_constraints[name].forward(value)
-        for name, value in log_params.items()
+        name: constraints[name].forward(value) for name, value in log_params.items()
     }
     params.update(fixed)
     return -log_density(
@@ -77,10 +76,35 @@ def max_likelihood(
     numpyro_fn=lqg_model,
     max_steps=2_000,
     constraints=None,
+    num_restarts=5,
     **fixed,
 ):
-    if constraints is None:
-        constraints = default_constraints
+    """Maximum likelihood estimation of the parameters of an LQG model.
+
+    The optimization is performed in an unconstrained space and mapped to the
+    parameter space via the bijectors in ``constraints``. It is repeated from
+    ``num_restarts`` random initializations, and the solution with the lowest
+    negative log likelihood is returned.
+
+    Args:
+        key: jax.random.PRNGKey for sampling initial parameters
+        x: observed data of shape (n_trials, T, d)
+        model: model class (e.g. BoundedActor)
+        numpyro_fn: numpyro model function defining the likelihood
+        max_steps: maximum number of optimization steps per restart
+        constraints: dict mapping parameter names to bijectors (e.g. Box, LogBox).
+            Parameters not in this dict use the bounds in ``default_constraints``.
+        num_restarts: number of random restarts of the optimization
+        **fixed: parameters that are fixed to the given values (not estimated)
+
+    Returns:
+        dict: estimated parameters
+    """
+    constraints = {**default_constraints, **(constraints or {})}
+
+    # bijectors are pytrees, so we close over them instead of passing them as args
+    def loss(log_params, args):
+        return _log_likelihood(log_params, args, constraints)
 
     def _fit(key):
         # sample initial parameters (in unconstrained space)
@@ -96,7 +120,7 @@ def max_likelihood(
         }
         solver = optx.LBFGS(rtol=1e-4, atol=1e-4)
         solution = optx.minimise(
-            _log_likelihood,
+            loss,
             solver,
             initial_params,
             args=(numpyro_fn, x, model, fixed),
@@ -104,12 +128,12 @@ def max_likelihood(
             throw=False,
         )
         params = {
-            name: default_constraints[name].forward(value)
+            name: constraints[name].forward(value)
             for name, value in solution.value.items()
         }
         return params, solution.state.f_info.f
 
-    params, nll = jax.vmap(_fit)(random.split(key, 5))
+    params, nll = jax.vmap(_fit)(random.split(key, num_restarts))
     params = {k: v[jnp.argmin(nll)] for k, v in params.items()}
 
     return params  # , losses
