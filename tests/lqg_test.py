@@ -8,6 +8,7 @@ from lqg.tracking import (
     BoundedActor,
     SubjectiveActor,
     PointMassBoundedActor,
+    PointMassSubjectiveActor,
     OptimalActor,
     RelativeObservationBoundedActor,
 )
@@ -49,6 +50,7 @@ def test_lqg_simulate():
         BoundedActor,
         SubjectiveActor,
         PointMassBoundedActor,
+        PointMassSubjectiveActor,
         OptimalActor,
         RelativeObservationBoundedActor,
     ],
@@ -91,6 +93,27 @@ def test_simulate_subjective():
     x_s = subjective_actor.simulate(rng_key=random.PRNGKey(0), n=20)
 
     assert jnp.allclose(x_b, x_s)
+
+
+def test_simulate_point_mass_subjective():
+    """Test that point-mass subjective model without subjective component is equal to point-mass bounded actor."""
+    params = dict(
+        process_noise=1.0,
+        sigma_target=6.0,
+        action_cost=0.01,
+        action_variability=0.5,
+        sigma_cursor=3.0,
+        T=500,
+    )
+    bounded_actor = PointMassBoundedActor(**params)
+    subjective_actor = PointMassSubjectiveActor(
+        **params, subj_noise=1.0, subj_vel_noise=0.0
+    )
+
+    x_b = bounded_actor.simulate(rng_key=random.PRNGKey(0), n=20)
+    x_s = subjective_actor.simulate(rng_key=random.PRNGKey(0), n=20)
+
+    assert jnp.allclose(x_b, x_s, atol=1e-4)
 
 
 def test_belief_tracking_distribution():

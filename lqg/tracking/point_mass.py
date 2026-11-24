@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from jax.scipy import linalg
 
-from lqg.system import Actor, System
+from lqg.system import Actor, Dynamics, System
 
 
 class PointMassBoundedActor(System):
@@ -47,6 +47,84 @@ class PointMassBoundedActor(System):
         spec = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
         super().__init__(actor=spec, dynamics=spec)
+
+
+class PointMassSubjectiveActor(System):
+    """Point-mass hand dynamics with a subjective model of the target dynamics.
+
+    The true dynamics are the same as in PointMassBoundedActor (random-walk target,
+    point-mass cursor with first-order muscle activation). The actor, however,
+    assumes that the target has an additional latent velocity, i.e. it believes in
+    the model
+
+        target_{t+1} = target_t + dt * target_vel_t + subj_noise * eps
+        target_vel_{t+1} = target_vel_t + subj_vel_noise * eps
+
+    Actor state: [target, cursor_pos, cursor_vel, force, target_vel]. The first four
+    dimensions coincide with the state of the true dynamics.
+
+    With subj_noise == process_noise and subj_vel_noise == 0, the model reduces to
+    PointMassBoundedActor.
+    """
+
+    def __init__(
+        self,
+        process_noise=1.0,
+        action_variability=1e-3,
+        subj_noise=1.0,
+        subj_vel_noise=0.5,
+        sigma_target=6.0,
+        sigma_cursor=12.5,
+        action_cost=0.01,
+        velocity_cost=0.01,
+        force_cost=0.01,
+        dt=1.0 / 60.0,
+        T=1000,
+        tau=0.066,
+    ):
+        A_pm, B_pm, V_pm = point_mass_dynamics_matrices(
+            tau=tau, action_variability=action_variability, dt=dt
+        )
+
+        # observation of target and cursor position
+        W = jnp.diag(jnp.array([sigma_target, sigma_cursor]))
+
+        # true dynamics: [target, cursor_pos, cursor_vel, force]
+        A = linalg.block_diag(jnp.eye(1), A_pm)
+        B = jnp.vstack([jnp.zeros((1, 1)), B_pm])
+        V = linalg.block_diag(jnp.diag(jnp.array([process_noise])), V_pm)
+        F = jnp.eye(2, 4)
+
+        dyn = Dynamics(A=A, B=B, F=F, V=V, W=W, T=T)
+
+        # subjective model: [target, cursor_pos, cursor_vel, force, target_vel]
+        A = linalg.block_diag(jnp.eye(1), A_pm, jnp.eye(1))
+        A = A.at[0, 4].set(dt)  # target position driven by latent target velocity
+        B = jnp.vstack([jnp.zeros((1, 1)), B_pm, jnp.zeros((1, 1))])
+        V = linalg.block_diag(
+            jnp.diag(jnp.array([subj_noise])),
+            V_pm,
+            jnp.diag(jnp.array([subj_vel_noise])),
+        )
+        F = jnp.eye(2, 5)
+
+        # cost on distance between cursor and target, velocity and force
+        Q = linalg.block_diag(
+            jnp.array(
+                [
+                    [1.0, -1.0, 0.0, 0.0],
+                    [-1.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, velocity_cost, 0.0],
+                    [0.0, 0.0, 0.0, force_cost],
+                ]
+            ),
+            jnp.zeros((1, 1)),  # no cost on target velocity
+        )
+        R = jnp.eye(B.shape[1]) * action_cost
+
+        act = Actor(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
+
+        super().__init__(actor=act, dynamics=dyn)
 
 
 def van_loan_discretization(A, B, Q, dt):

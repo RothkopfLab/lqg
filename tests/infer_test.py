@@ -3,8 +3,8 @@ from jax import random
 from numpyro import handlers
 
 from lqg.infer.utils import infer
-from lqg.infer.mle import max_likelihood
-from lqg.tracking import BoundedActor, SubjectiveActor
+from lqg.infer.mle import LogBox, max_likelihood, parameter_recovery
+from lqg.tracking import BoundedActor, PointMassSubjectiveActor, SubjectiveActor
 
 
 def test_lqg_infer_shapes():
@@ -85,3 +85,27 @@ def test_max_likelihood_recovers_parameters():
     assert jnp.isclose(
         params["action_variability"], true_params["action_variability"], atol=0.02
     )
+
+
+def test_parameter_recovery_runs():
+    """Check that parameter recovery runs for a model with fixed parameters and custom bounds."""
+    results = parameter_recovery(
+        random.PRNGKey(0),
+        PointMassSubjectiveActor,
+        num_datasets=2,
+        T=50,
+        num_trials=2,
+        max_steps=5,
+        num_restarts=1,
+        progress=False,
+        constraints={"action_cost": LogBox(low=1e-10, high=1.0)},
+        dt=1 / 60.0,
+        tau=0.066,
+        force_cost=0.0,
+    )
+
+    assert set(results["true"]) == set(results["estimate"])
+    assert "tau" not in results["true"] and "force_cost" not in results["true"]
+    for values in [*results["true"].values(), *results["estimate"].values()]:
+        assert values.shape == (2,)
+    assert results["ll_true"].shape == results["ll_estimate"].shape == (2,)
