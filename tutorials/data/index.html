@@ -16,7 +16,7 @@
         <link rel="prev" href="../overview/">
       
       
-        <link rel="next" href="../../api/">
+        <link rel="next" href="../point_mass/">
       
       
         
@@ -305,6 +305,8 @@
       
         
       
+        
+      
     
     
     
@@ -554,6 +556,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../point_mass/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hand dynamics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2011,7 +2041,8 @@ for x in data:
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">low</span> <span class="o">=</span> <span class="n">constraints</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="o">-</span><span class="n">jnp</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
             <span class="n">high</span> <span class="o">=</span> <span class="n">constraints</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">)</span> <span class="ow">or</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">):</span>
+            <span class="c1"># atol=0, otherwise every value below 1e-8 would count as close to the bound</span>
+            <span class="k">if</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
                 <span class="n">flagged</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">condition</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
     <span class="k">return</span> <span class="n">flagged</span>
 
@@ -2026,7 +2057,8 @@ for x in data:
         for name, value in params.items():
             low = constraints[name].forward(-jnp.inf)
             high = constraints[name].forward(jnp.inf)
-            if jnp.isclose(value, low, rtol=rtol) or jnp.isclose(value, high, rtol=rtol):
+            # atol=0, otherwise every value below 1e-8 would count as close to the bound
+            if jnp.isclose(value, low, rtol=rtol, atol=0) or jnp.isclose(value, high, rtol=rtol, atol=0):
                 flagged.append((condition, name, float(value)))
     return flagged
 
@@ -2331,7 +2363,8 @@ plt.show()</div>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="next-steps">Next steps<a class="anchor-link" href="#next-steps">¶</a></h2><p>Maximum likelihood estimation gives point estimates. To quantify the uncertainty about the parameters, you can instead sample from their posterior distribution with MCMC, as shown in the <a href="overview.ipynb#bayesian-inference-with-numpyro">Overview</a>. <code>lqg.infer.models</code> also contains NumPyro models in which some parameters are shared across conditions (<code>shared_params_lqg_model</code>).</p>
+<h2 id="next-steps">Next steps<a class="anchor-link" href="#next-steps">¶</a></h2><p>In the <a href="point_mass.ipynb">Hand dynamics</a> tutorial, we extend both models with more realistic point-mass dynamics of the hand, which improves the fit to these data.</p>
+<p>Maximum likelihood estimation gives point estimates. To quantify the uncertainty about the parameters, you can instead sample from their posterior distribution with MCMC, as shown in the <a href="overview.ipynb#bayesian-inference-with-numpyro">Overview</a>. <code>lqg.infer.models</code> also contains NumPyro models in which some parameters are shared across conditions (<code>shared_params_lqg_model</code>).</p>
 </div>
 </div>
 </div>
@@ -2365,7 +2398,7 @@ plt.show()</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="November 23, 2026 15:15:10 UTC"><span class="timeago" datetime="2026-11-23T15:15:10+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="November 23, 2026 15:15:10 UTC">2026-11-23</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="November 24, 2026 10:14:55 UTC"><span class="timeago" datetime="2026-11-24T10:14:55+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="November 24, 2026 10:14:55 UTC">2026-11-24</span>
   </span>
 
     
