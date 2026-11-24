@@ -7,7 +7,6 @@ from lqg.tracking.subjective import SubjectiveActor
 
 
 def delay_system(spec, delay):
-    # TODO: multisensory_delay_system is a generalized version of this function, so we should probably merge them at some point
     T = spec.A.shape[0]
     d = spec.A.shape[1]
 

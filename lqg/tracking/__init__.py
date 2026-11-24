@@ -5,7 +5,6 @@ from lqg.tracking.basic import (
 )
 from lqg.tracking.subjective import SubjectiveActor
 from lqg.tracking.point_mass import PointMassBoundedActor, PointMassSubjectiveActor
-from lqg.tracking.multisensory import MultisensoryModel
 
 __all__ = [
     "BoundedActor",
@@ -14,5 +13,4 @@ __all__ = [
     "SubjectiveActor",
     "PointMassBoundedActor",
     "PointMassSubjectiveActor",
-    "MultisensoryModel",
 ]
