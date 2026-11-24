@@ -1,3 +1,4 @@
+import jax
 import pytest
 import jax.numpy as jnp
 from jax import random
@@ -95,8 +96,22 @@ def test_simulate_subjective():
     assert jnp.allclose(x_b, x_s)
 
 
-def test_simulate_point_mass_subjective():
-    """Test that point-mass subjective model without subjective component is equal to point-mass bounded actor."""
+@pytest.fixture
+def x64():
+    """Run a test in double precision and restore the previous setting afterwards."""
+    previous = jax.config.jax_enable_x64
+    jax.config.update("jax_enable_x64", True)
+    yield
+    jax.config.update("jax_enable_x64", previous)
+
+
+def test_simulate_point_mass_subjective(x64):
+    """Test that point-mass subjective model without subjective component is equal to point-mass bounded actor.
+
+    The two models compute their gains with matrices of different sizes. In single precision,
+    rounding errors accumulate over the simulated time steps and differ between platforms,
+    so we compare in double precision.
+    """
     params = dict(
         process_noise=1.0,
         sigma_target=6.0,
@@ -113,7 +128,8 @@ def test_simulate_point_mass_subjective():
     x_b = bounded_actor.simulate(rng_key=random.PRNGKey(0), n=20)
     x_s = subjective_actor.simulate(rng_key=random.PRNGKey(0), n=20)
 
-    assert jnp.allclose(x_b, x_s, atol=1e-4)
+    assert x_b.dtype == jnp.float64
+    assert jnp.allclose(x_b, x_s)
 
 
 def test_belief_tracking_distribution():
