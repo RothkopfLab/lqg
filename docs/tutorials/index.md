@@ -14,4 +14,8 @@ icon: octicons/book-16
 
   Fitting models to tracking data with maximum likelihood estimation.
 
+- :simple-jupyter:{ .lg .middle } **[Hand dynamics](point_mass.ipynb)**
+
+  Improving the fit to tracking data with point-mass dynamics of the hand.
+
 </div>

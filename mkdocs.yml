@@ -13,6 +13,7 @@ nav:
       - tutorials/index.md
       - Overview: tutorials/overview.ipynb
       - Data: tutorials/data.ipynb
+      - Hand dynamics: tutorials/point_mass.ipynb
   - API: api.md
 
 # Material for MkDocs (https://squidfunk.github.io/mkdocs-material/)
