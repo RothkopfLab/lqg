@@ -337,10 +337,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-examples" class="md-nav__link">
+  <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage examples
+        Documentation
       
     </span>
   </a>
@@ -635,10 +635,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-examples" class="md-nav__link">
+  <a href="#documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage examples
+        Documentation
       
     </span>
   </a>
@@ -733,19 +733,19 @@
 <p>Since publication of our <a href="https://elifesciences.org/articles/76635">eLife paper</a>, I have substantially updated the package. If you want to use the package as described in the paper, please install an older version <code>&lt;0.2.0</code>:</p>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">lqg</span><span class="o">==</span><span class="m">0</span>.1.9
 </code></pre></div>
-<p>If you want the latest development version, I recommend cloning the repository and installing locally in a virtual environment:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:dominikstrb/lqg.git
+<p>If you want the latest development version, I recommend cloning the repository and installing it locally with <a href="https://docs.astral.sh/uv/">uv</a>:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/RothkopfLab/lqg.git
 <span class="nb">cd</span><span class="w"> </span>lqg
-python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>env
-<span class="nb">source</span><span class="w"> </span>env/bin/activate
-python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+uv<span class="w"> </span>sync
 </code></pre></div>
-<h2 id="usage-examples">Usage examples</h2>
-<p>The notebooks in the <a href="https://rothkopflab.github.io/lqg/tutorials/overview/">documentation</a> illustrate how to use the <code>lqg</code> package to define optimal control models, simulate trajectories, and infer parameters from observed data.</p>
+<p>This creates a virtual environment in <code>.venv</code> with the package and all development dependencies (including those for tests and documentation). You can run commands in it with <code>uv run</code>, e.g. <code>uv run pytest</code>. If you want to contribute, run <code>make install</code> instead of <code>uv sync</code>, which also installs the pre-commit hooks.</p>
+<h2 id="documentation">Documentation</h2>
+<p>The <a href="https://rothkopflab.github.io/lqg/">documentation</a> contains <a href="https://rothkopflab.github.io/lqg/tutorials/">tutorials</a> that illustrate how to use the <code>lqg</code> package to define optimal control models, simulate trajectories, and infer parameters from observed data:</p>
 <ul>
-<li><a href="https://rothkopflab.github.io/lqg/tutorials/overview/"><code>Overview</code></a> explains the model and its parameters in more detail, including the extension to subjective internal models (based on <a href="https://www.youtube.com/watch?v=3DbO9n6_mNE">my tutorial at CCN 2022</a>)</li>
-<li><a href="https://rothkopflab.github.io/lqg/tutorials/data/"><code>Data</code></a> applies the method to data from a tracking experiment</li>
+<li><a href="https://rothkopflab.github.io/lqg/tutorials/overview/">Overview</a> explains the model and its parameters, the extension to subjective internal models, and Bayesian inference of the parameters (based on <a href="https://www.youtube.com/watch?v=3DbO9n6_mNE">my tutorial at CCN 2022</a>).</li>
+<li><a href="https://rothkopflab.github.io/lqg/tutorials/data/">Data</a> fits models to data from a tracking experiment (<a href="https://jov.arvojournals.org/article.aspx?articleid=2301260">Bonnen et al., 2015</a>) with maximum likelihood estimation, compares them, and checks how well they reproduce the data.</li>
 </ul>
+<p>Each tutorial is a Jupyter notebook, which you can find in <a href="https://github.com/RothkopfLab/lqg/tree/main/docs/tutorials"><code>docs/tutorials</code></a> and run locally.</p>
 <h2 id="citation">Citation</h2>
 <p>If you use our method or code in your research, please cite our paper:</p>
 <div class="highlight"><pre><span></span><code><span class="nc">@article</span><span class="p">{</span><span class="nl">straub2022putting</span><span class="p">,</span>
@@ -785,7 +785,7 @@ python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </sp
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="September 22, 2026 16:50:25 UTC"><span class="timeago" datetime="2026-09-22T16:50:25+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="September 22, 2026 16:50:25 UTC">2026-09-22</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="November 26, 2026 15:52:50 UTC"><span class="timeago" datetime="2026-11-26T15:52:50+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="November 26, 2026 15:52:50 UTC">2026-11-26</span>
   </span>
 
     
