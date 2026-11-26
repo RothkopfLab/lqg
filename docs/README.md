@@ -28,22 +28,24 @@ Since publication of our [eLife paper](https://elifesciences.org/articles/76635)
 python -m pip install lqg==0.1.9
 ```
 
-If you want the latest development version, I recommend cloning the repository and installing locally in a virtual environment:
+If you want the latest development version, I recommend cloning the repository and installing it locally with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-git clone git@github.com:dominikstrb/lqg.git
+git clone https://github.com/RothkopfLab/lqg.git
 cd lqg
-python -m venv env
-source env/bin/activate
-python -m pip install -e .
+uv sync
 ```
 
-## Usage examples
+This creates a virtual environment in `.venv` with the package and all development dependencies (including those for tests and documentation). You can run commands in it with `uv run`, e.g. `uv run pytest`. If you want to contribute, run `make install` instead of `uv sync`, which also installs the pre-commit hooks.
 
-The notebooks in the [documentation](https://rothkopflab.github.io/lqg/tutorials/overview/) illustrate how to use the `lqg` package to define optimal control models, simulate trajectories, and infer parameters from observed data.
+## Documentation
 
-- [`Overview`](https://rothkopflab.github.io/lqg/tutorials/overview/) explains the model and its parameters in more detail, including the extension to subjective internal models (based on [my tutorial at CCN 2022](https://www.youtube.com/watch?v=3DbO9n6_mNE))
-- [`Data`](https://rothkopflab.github.io/lqg/tutorials/data/) applies the method to data from a tracking experiment
+The [documentation](https://rothkopflab.github.io/lqg/) contains [tutorials](https://rothkopflab.github.io/lqg/tutorials/) that illustrate how to use the `lqg` package to define optimal control models, simulate trajectories, and infer parameters from observed data:
+
+- [Overview](https://rothkopflab.github.io/lqg/tutorials/overview/) explains the model and its parameters, the extension to subjective internal models, and Bayesian inference of the parameters (based on [my tutorial at CCN 2022](https://www.youtube.com/watch?v=3DbO9n6_mNE)).
+- [Data](https://rothkopflab.github.io/lqg/tutorials/data/) fits models to data from a tracking experiment ([Bonnen et al., 2015](https://jov.arvojournals.org/article.aspx?articleid=2301260)) with maximum likelihood estimation, compares them, and checks how well they reproduce the data.
+
+Each tutorial is a Jupyter notebook, which you can find in [`docs/tutorials`](https://github.com/RothkopfLab/lqg/tree/main/docs/tutorials) and run locally.
 
 ## Citation
 
