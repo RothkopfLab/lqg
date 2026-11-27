@@ -16,7 +16,7 @@ This repository contains the official [JAX](https://github.com/google/jax) imple
 
 ## Installation
 
-The package can be installed via `pip`
+The package can be installed via `pip`:
 
 ```bash
 python -m pip install lqg

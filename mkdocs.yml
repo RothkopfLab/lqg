@@ -74,6 +74,16 @@ plugins:
       execute: false
       # Required for Altair/Plotly to work
       include_requirejs: true
+  # Python API documentation generation
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            show_source: true
+            members_order: alphabetical
+            show_root_heading: true
 
 extra_javascript:
   - javascripts/mathjax.js
