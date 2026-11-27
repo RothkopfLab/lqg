@@ -81,6 +81,11 @@ plugins:
           paths: [.]
           options:
             docstring_style: google
+            docstring_options:
+              # "Returns:" entries are written as "type: description"
+              returns_named_value: false
+              # The code base has few type annotations
+              warn_missing_types: false
             show_source: true
             members_order: alphabetical
             show_root_heading: true

@@ -67,13 +67,13 @@ class System:
         Args:
             rng_key (jax.random.PRNGKey): random number generator key
             n (int): number of trials
-            T (int): number of time steps
             x0 (jnp.array): initial state
             xhat0 (jnp.array): initial belief
+            Sigma0 (jnp.array): initial belief covariance
             return_all (bool): return estimates, controls and observations as well
 
         Returns:
-            jnp.array (T, n, d)
+            jnp.array: simulated states of shape (T, n, d)
         """
 
         Sigma0 = self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0
@@ -223,11 +223,10 @@ class System:
         """Conditional distribution p(x | theta)
 
         Args:
-            self: LQG
             x: time series of shape T (time steps), n (trials), d (dimensionality)
 
         Returns:
-            numpyro.distributions.MultivariateNormal
+            numpyro.distributions.MultivariateNormal: conditional distribution
         """
         T, obs_dim = x.shape
         xdim = self.dynamics.A.shape[1]

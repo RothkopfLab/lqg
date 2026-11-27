@@ -20,3 +20,5 @@ repos:
     rev: "v3.0.3"
     hooks:
       - id: prettier
+        # Prettier flattens the indented mkdocstrings options blocks
+        exclude: ^docs/api\.md$
