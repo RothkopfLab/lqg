@@ -10,6 +10,41 @@ from lqg.utils import time_stack_spec
 
 
 class System:
+    """An agent acting in an environment, both described as linear-Gaussian systems.
+
+    The environment (``dynamics``) evolves as
+
+    ```
+    x[t+1] = A x[t] + B u[t] + V eps[t],    eps[t] ~ N(0, I)
+    y[t+1] = F x[t+1] + W eta[t],         eta[t] ~ N(0, I)
+    ```
+
+    The agent (``actor``) has its own internal model of the environment, with
+    its own matrices ``A, B, F, V, W`` and a quadratic cost (``Q, R``). It
+    computes optimal control gains for that cost (LQR) and tracks its belief
+    ``xhat`` about the state with a Kalman filter. Its actions
+    ``u[t] = L[t] xhat[t] + k[t]`` then drive the true dynamics.
+
+    When the agent's model matches the environment, use [LQG][lqg.system.LQG].
+    Keeping the two separate allows models of agents with subjective or
+    mismatched beliefs about the environment.
+
+    Shapes in this class use these names:
+
+    - ``n``: number of trials
+    - ``T``: number of time steps, so trajectories have ``T + 1`` states
+    - ``xdim``: state dimensionality of the environment
+    - ``bdim``: state dimensionality of the agent's internal model
+    - ``ydim``: observation dimensionality
+    - ``udim``: action dimensionality
+
+    Args:
+        actor (LQGSpec): the agent's internal model and cost function, e.g. from
+            [Actor][lqg.system.Actor].
+        dynamics (LQGSpec): the true dynamics of the environment, e.g. from
+            [Dynamics][lqg.system.Dynamics]. Its cost terms are ignored.
+    """
+
     def __init__(self, actor: LQGSpec, dynamics: LQGSpec):
         self.actor = actor
         self.dynamics = dynamics
@@ -67,13 +102,21 @@ class System:
         Args:
             rng_key (jax.random.PRNGKey): random number generator key
             n (int): number of trials
-            x0 (jnp.array): initial state
-            xhat0 (jnp.array): initial belief
-            Sigma0 (jnp.array): initial belief covariance
-            return_all (bool): return estimates, controls and observations as well
+            x0 (jnp.array, optional): initial state of shape (xdim,). Defaults
+                to zeros.
+            xhat0 (jnp.array, optional): initial belief of shape (bdim,).
+                Defaults to zeros.
+            Sigma0 (jnp.array, optional): initial belief covariance of shape
+                (bdim, bdim), used to compute the Kalman gains. Defaults to
+                ``V[0] @ V[0].T`` of the actor.
+            return_all (bool): return beliefs, observations and actions as well
 
         Returns:
-            jnp.array: simulated states of shape (T, n, d)
+            jnp.array or tuple: If ``return_all`` is False, the simulated states
+                ``x`` of shape (n, T+1, xdim), including the initial state.
+                Otherwise, a tuple ``(x, xhat, y, u)`` with the states, the
+                beliefs of shape (n, T+1, bdim), the observations ``y[1:]`` of
+                shape (n, T, ydim) and the actions of shape (n, T, udim).
         """
 
         Sigma0 = self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0
@@ -145,14 +188,26 @@ class System:
         """Simulate cursor actions given pre-existing experimental target trajectories.
 
         Args:
+        The target dimensions of the state are taken from the data at each time
+        step, while the dimensions selected by ``action_dim_mask`` are simulated
+        from the agent's actions.
+
+        Args:
             x (jnp.array): Experimental state data of shape (n, T+1, xdim)
-            action_dim_mask (jnp.array): Boolean mask for cursor/action state dimensions
+            action_dim_mask (jnp.array): Boolean mask of shape (xdim,) that
+                selects the state dimensions to simulate (e.g. cursor position)
             rng_key (jax.random.PRNGKey): Random number generator key
-            xhat0 (jnp.array, optional): Initial belief state
-            return_all (bool): Whether to return intermediate estimates, controls, and obs
+            xhat0 (jnp.array, optional): Initial belief of shape (bdim,).
+                Defaults to zeros.
+            Sigma0 (jnp.array, optional): initial belief covariance of shape
+                (bdim, bdim). Defaults to ``V[0] @ V[0].T`` of the actor.
+            return_all (bool): Whether to return beliefs, observations and
+                actions as well
 
         Returns:
-            jnp.array: Re-simulated state trajectories of shape (n, T+1, xdim)
+            jnp.array or tuple: If ``return_all`` is False, the states of shape
+                (n, T+1, xdim). Otherwise, a tuple ``(x, xhat, y, u)`` with the
+                same shapes as in [simulate][lqg.system.System.simulate].
         """
         Sigma0 = self.actor.V[0] @ self.actor.V[0].T if Sigma0 is None else Sigma0
 
@@ -220,13 +275,25 @@ class System:
             return x_sim
 
     def conditional_moments(self, x, x0=None, xhat0=None, Sigma0=None):
-        """Conditional distribution p(x | theta)
+        """Moments of the joint state and belief, given past observed states.
+
+        For each time step ``t``, computes the mean and covariance of the
+        Gaussian ``p(x[t+1], xhat[t+1] | x[0:t+1])`` for a single trial, where
+        the agent's belief ``xhat`` is marginalized out over the past.
 
         Args:
-            x: time series of shape T (time steps), n (trials), d (dimensionality)
+            x (jnp.array): one trial of observed states, of shape (T+1, d). If
+                ``d < xdim``, the first ``d`` state dimensions are observed.
+            x0 (jnp.array, optional): initial state. Defaults to ``x[0]``.
+            xhat0 (jnp.array, optional): initial belief. Defaults to ``x0``.
+            Sigma0 (jnp.array, optional): initial belief covariance of shape
+                (bdim, bdim), used to compute the Kalman gains. Defaults to
+                ``V[0] @ V[0].T`` of the actor.
 
         Returns:
-            numpyro.distributions.MultivariateNormal: conditional distribution
+            tuple: ``(mu, Sigma)``, the means of shape (T, xdim + bdim) and the
+                covariances of shape (T, xdim + bdim, xdim + bdim). The first
+                ``xdim`` entries are the state, the rest the belief.
         """
         T, obs_dim = x.shape
         xdim = self.dynamics.A.shape[1]
@@ -319,6 +386,26 @@ class System:
         return mu, Sigma
 
     def conditional_distribution(self, x, x0=None, xhat0=None, Sigma0=None):
+        """Distribution of each state given all previous states.
+
+        This is ``p(x[t+1] | x[0:t+1])`` for every trial and time step, with the
+        agent's beliefs marginalized out. See
+        [conditional_moments][lqg.system.System.conditional_moments].
+
+        Args:
+            x (jnp.array): observed states of shape (n, T+1, d)
+            x0 (jnp.array, optional): initial states of shape (n, d). Defaults
+                to ``x[:, 0]``.
+            xhat0 (jnp.array, optional): initial beliefs of shape (n, bdim).
+                Defaults to ``x0``.
+            Sigma0 (jnp.array, optional): initial belief covariance of shape
+                (bdim, bdim)
+
+        Returns:
+            numpyro.distributions.Distribution: a multivariate normal with batch
+                shape (n,) and event shape (T, d), to be evaluated on
+                ``x[:, 1:]``.
+        """
         n, T, d = x.shape
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
@@ -330,21 +417,65 @@ class System:
         return dist.MultivariateNormal(mu[:, :, :d], Sigma[:, :, :d, :d]).to_event(1)
 
     def log_likelihood(self, x, x0=None, xhat0=None, Sigma0=None):
-        # log likelihood of the states at time t+1 given all previous states up to time t
+        """Log likelihood of observed trajectories.
+
+        Evaluates ``log p(x[1:] | x[0])``, factorized over time steps as in
+        [conditional_distribution][lqg.system.System.conditional_distribution].
+
+        Args:
+            x (jnp.array): observed states of shape (n, T+1, d)
+            x0 (jnp.array, optional): initial states of shape (n, d)
+            xhat0 (jnp.array, optional): initial beliefs of shape (n, bdim)
+            Sigma0 (jnp.array, optional): initial belief covariance of shape
+                (bdim, bdim)
+
+        Returns:
+            jnp.array: log likelihood of each trial, of shape (n,)
+        """
         return self.conditional_distribution(
             x, x0=x0, xhat0=xhat0, Sigma0=Sigma0
         ).log_prob(x[:, 1:])
 
     def belief_tracking_distribution(self, x, Sigma0=None):
+        """Distribution of the agent's beliefs given the observed states.
+
+        This is ``p(xhat[t+1] | x[0:t+1])`` for every trial and time step.
+
+        Args:
+            x (jnp.array): observed states of shape (n, T+1, xdim)
+            Sigma0 (jnp.array, optional): initial belief covariance of shape
+                (bdim, bdim)
+
+        Returns:
+            numpyro.distributions.MultivariateNormal: a distribution with batch
+                shape (n, T) and event shape (bdim,)
+        """
         d = self.xdim
 
         # compute p(x_{t+1}, xhat_{t+1} | x_{1:t})
-        mu, Sigma = vmap(self.conditional_moments, in_axes=(0, None))(x, Sigma0)
+        mu, Sigma = vmap(
+            lambda xi: self.conditional_moments(xi, Sigma0=Sigma0), in_axes=0
+        )(x)
 
         # return those elements of mu and Sigma that correspond to xhat
         return dist.MultivariateNormal(mu[:, :, d:], Sigma[:, :, d:, d:])
 
     def to_numpyro(self, Sigma0=None, xdim=None):
+        """Wrap the system as a numpyro distribution over trajectories.
+
+        The distribution can be used with ``numpyro.sample`` in a model, e.g.
+        ``numpyro.sample("x", system.to_numpyro(), obs=x)``.
+
+        Args:
+            Sigma0 (jnp.array, optional): initial belief covariance of shape
+                (bdim, bdim)
+            xdim (int, optional): number of observed state dimensions. Defaults
+                to all of them.
+
+        Returns:
+            numpyro.distributions.Distribution: a distribution with event shape
+                (T+1, xdim)
+        """
         return NumpyroLQG(self, Sigma0=Sigma0, xdim=xdim)
 
     def _repr_latex_(self) -> str:
@@ -417,6 +548,24 @@ class System:
 
 
 def Dynamics(A, B, F, V, W, T=1000):
+    """Specification of an environment with time-invariant dynamics.
+
+    ```
+    x[t+1] = A x[t] + B u[t] + V eps[t],    eps[t] ~ N(0, I)
+    y[t+1] = F x[t+1] + W eta[t],         eta[t] ~ N(0, I)
+    ```
+
+    Args:
+        A (jnp.array): state transition matrix of shape (xdim, xdim)
+        B (jnp.array): control matrix of shape (xdim, udim)
+        F (jnp.array): observation matrix of shape (ydim, xdim)
+        V (jnp.array): process noise Cholesky factor of shape (xdim, xdim)
+        W (jnp.array): observation noise Cholesky factor of shape (ydim, ydim)
+        T (int): number of time steps
+
+    Returns:
+        LQGSpec: the matrices repeated over ``T`` time steps, with zero costs
+    """
     xdim = A.shape[0]
     udim = B.shape[1]
 
@@ -433,17 +582,61 @@ def Dynamics(A, B, F, V, W, T=1000):
 
 
 def Actor(A, B, F, V, W, Q, R, T=1000):
+    """Specification of an agent's internal model and cost function.
+
+    The agent assumes the same linear-Gaussian dynamics as in
+    [Dynamics][lqg.system.Dynamics] and minimizes the cost
+    ``sum_t x[t]^T Q x[t] + u[t]^T R u[t]`` (with constant factors dropped).
+
+    Args:
+        A (jnp.array): state transition matrix of shape (bdim, bdim)
+        B (jnp.array): control matrix of shape (bdim, udim)
+        F (jnp.array): observation matrix of shape (ydim, bdim)
+        V (jnp.array): process noise Cholesky factor of shape (bdim, bdim)
+        W (jnp.array): observation noise Cholesky factor of shape (ydim, ydim)
+        Q (jnp.array): state cost matrix of shape (bdim, bdim)
+        R (jnp.array): action cost matrix of shape (udim, udim)
+        T (int): number of time steps
+
+    Returns:
+        LQGSpec: the matrices repeated over ``T`` time steps. The final state
+            cost is ``Q``, and all linear and cross terms are zero.
+    """
     return time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
 
 class LQG(System):
+    """A system in which the agent's internal model matches the environment.
+
+    The same matrices are used for the actor and the dynamics. See
+    [Actor][lqg.system.Actor] for their meaning and shapes.
+    """
+
     def __init__(self, A, B, F, V, W, Q, R, T=1000):
+        """Create an LQG system from time-invariant matrices.
+
+        Args:
+            A (jnp.array): state transition matrix of shape (xdim, xdim)
+            B (jnp.array): control matrix of shape (xdim, udim)
+            F (jnp.array): observation matrix of shape (ydim, xdim)
+            V (jnp.array): process noise Cholesky factor of shape (xdim, xdim)
+            W (jnp.array): observation noise Cholesky factor of shape
+                (ydim, ydim)
+            Q (jnp.array): state cost matrix of shape (xdim, xdim)
+            R (jnp.array): action cost matrix of shape (udim, udim)
+            T (int): number of time steps
+        """
         spec = time_stack_spec(A=A, B=B, F=F, V=V, W=W, Q=Q, R=R, T=T)
 
         super().__init__(actor=spec, dynamics=spec)
 
 
 class NumpyroLQG(dist.Distribution):
+    """A [System][lqg.system.System] as a numpyro distribution over trajectories.
+
+    Usually created with [to_numpyro][lqg.system.System.to_numpyro].
+    """
+
     def __init__(self, system: System, xdim=None, Sigma0=None):
         self.system = system
         self.Sigma0 = Sigma0

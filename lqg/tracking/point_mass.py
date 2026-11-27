@@ -5,6 +5,33 @@ from lqg.system import Actor, Dynamics, System
 
 
 class PointMassBoundedActor(System):
+    """Bounded actor in a tracking task with point-mass hand dynamics.
+
+    Unlike in [BoundedActor][lqg.tracking.basic.BoundedActor], the action does
+    not set the cursor velocity directly. It drives a first-order muscle
+    activation with time constant ``tau``, whose force accelerates the cursor
+    as a point mass. The state is ``[target, cursor_pos, cursor_vel, force]``,
+    and target and cursor position are observed with Gaussian noise. Only one
+    spatial dimension is supported.
+
+    The cost is the squared distance between target and cursor, plus
+    ``velocity_cost * cursor_vel^2``, ``force_cost * force^2`` and
+    ``action_cost * u^2``. The agent's internal model matches the dynamics.
+
+    Args:
+        process_noise (float): standard deviation of the target's random walk
+        action_variability (float): standard deviation of the noise on the
+            muscle activation
+        sigma_target (float): standard deviation of the target observation noise
+        sigma_cursor (float): standard deviation of the cursor observation noise
+        action_cost (float): weight of the action cost
+        velocity_cost (float): weight of the cost on cursor velocity
+        force_cost (float): weight of the cost on muscle force
+        dt (float): duration of a time step in seconds
+        T (int): number of time steps
+        tau (float): time constant of the muscle activation in seconds
+    """
+
     def __init__(
         self,
         process_noise=1.0,
@@ -65,6 +92,23 @@ class PointMassSubjectiveActor(System):
 
     With subj_noise == process_noise and subj_vel_noise == 0, the model reduces to
     PointMassBoundedActor.
+
+    Args:
+        process_noise (float): standard deviation of the target's random walk
+        action_variability (float): standard deviation of the noise on the
+            muscle activation
+        subj_noise (float): standard deviation of the target noise that the
+            actor assumes
+        subj_vel_noise (float): standard deviation of the target velocity noise
+            that the actor assumes
+        sigma_target (float): standard deviation of the target observation noise
+        sigma_cursor (float): standard deviation of the cursor observation noise
+        action_cost (float): weight of the action cost
+        velocity_cost (float): weight of the cost on cursor velocity
+        force_cost (float): weight of the cost on muscle force
+        dt (float): duration of a time step in seconds
+        T (int): number of time steps
+        tau (float): time constant of the muscle activation in seconds
     """
 
     def __init__(

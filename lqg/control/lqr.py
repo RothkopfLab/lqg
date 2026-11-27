@@ -6,7 +6,14 @@ from lqg.spec import LQGSpec
 
 
 class Gains(NamedTuple):
-    """LQR control gains"""
+    """LQR control gains, giving the optimal action ``u[t] = L[t] x[t] + k[t]``.
+
+    Attributes:
+        L (jnp.ndarray): feedback gains of shape (T, udim, xdim)
+        k (jnp.ndarray): feedforward terms of shape (T, udim)
+        H (jnp.ndarray): regularized Hessians of the cost-to-go with respect to
+            the action, of shape (T, udim, udim)
+    """
 
     L: jnp.ndarray
     k: jnp.ndarray
@@ -14,6 +21,24 @@ class Gains(NamedTuple):
 
 
 def backward(spec: LQGSpec, eps: float = 1e-8) -> Gains:
+    """Compute optimal control gains with a backward pass (Riccati recursion).
+
+    Solves the linear-quadratic regulator for the dynamics and cost in
+    ``spec``, ignoring noise. By the separation principle, these gains are
+    also optimal for the noisy, partially observed problem when applied to
+    the Kalman filter estimate of the state.
+
+    Args:
+        spec (LQGSpec): problem specification
+        eps (float): minimum eigenvalue of ``H``. ``H`` is shifted by a multiple
+            of the identity to reach it if needed, which keeps the problem
+            well-posed when ``R`` is not positive definite (see section 5.4.1 of
+            Li's PhD thesis).
+
+    Returns:
+        Gains: the control gains for each time step
+    """
+
     def loop(carry, step):
         S, s = carry
 

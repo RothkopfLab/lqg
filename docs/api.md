@@ -17,6 +17,7 @@ Here you can find detailed documentation for the public Python API of the `lqg` 
         - conditional_distribution
         - log_likelihood
         - belief_tracking_distribution
+        - to_numpyro
 
 ::: lqg.system.LQG
     options:
@@ -29,6 +30,22 @@ Here you can find detailed documentation for the public Python API of the `lqg` 
 
 ::: lqg.spec.LQGSpec
 
+## Tracking Models
+
+::: lqg.tracking.basic.TrackingTask
+
+::: lqg.tracking.basic.BoundedActor
+
+::: lqg.tracking.basic.OptimalActor
+
+::: lqg.tracking.basic.RelativeObservationBoundedActor
+
+::: lqg.tracking.subjective.SubjectiveActor
+
+::: lqg.tracking.point_mass.PointMassBoundedActor
+
+::: lqg.tracking.point_mass.PointMassSubjectiveActor
+
 ## Control & Estimation
 
 ::: lqg.control.lqr
@@ -36,6 +53,8 @@ Here you can find detailed documentation for the public Python API of the `lqg` 
 ::: lqg.belief.kf
 
 ## Inference & Models
+
+::: lqg.infer.utils.infer
 
 ::: lqg.infer.mle
 

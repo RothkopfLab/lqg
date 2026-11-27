@@ -25,6 +25,35 @@ def infer(
     seed=0,
     **fixed,
 ):
+    """Bayesian inference of model parameters with MCMC.
+
+    Samples from the posterior over the parameters of ``model`` given observed
+    trajectories, using NUTS. With ``method="neutra"``, a normalizing flow is
+    first fit to the posterior with SVI (10,000 steps) and used to
+    reparametrize the model, which can help with difficult posterior geometry.
+
+    Args:
+        x (jnp.array): observed trajectories of shape (n, T+1, d)
+        num_samples (int): number of posterior samples per chain
+        num_warmup (int): number of warmup steps per chain
+        model (type): model class, e.g.
+            [BoundedActor][lqg.tracking.basic.BoundedActor]
+        numpyro_fn (callable): numpyro model function defining the priors and
+            the likelihood. Defaults to the model in ``lqg.infer.models`` with
+            the default priors.
+        process_noise (float): target random walk standard deviation, which is
+            not estimated
+        dt (float): duration of a time step in seconds
+        method (str): ``"nuts"`` or ``"neutra"``
+        progress_bar (bool): whether to show a progress bar
+        num_chains (int): number of MCMC chains
+        seed (int): random seed
+        **fixed: parameters that are fixed to the given values (not estimated)
+
+    Returns:
+        numpyro.infer.MCMC: the MCMC object after running, e.g. use
+            ``mcmc.get_samples()`` to get the posterior samples
+    """
     if method == "nuts":
         # setup kernel
         nuts_kernel = NUTS(numpyro_fn, init_strategy=init_to_median)

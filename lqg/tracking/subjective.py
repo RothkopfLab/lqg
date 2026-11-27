@@ -14,6 +14,38 @@ def swap_dims(d, dim):
 
 
 class SubjectiveActor(System):
+    """Bounded actor with a subjective model of the target dynamics.
+
+    The true dynamics are the same as in
+    [BoundedActor][lqg.tracking.basic.BoundedActor]. The actor, however,
+    assumes that the target has an additional latent velocity, i.e. it
+    believes in the model
+
+    ```
+    target[t+1]     = target[t] + dt * target_vel[t] + subj_noise * eps
+    target_vel[t+1] = target_vel[t] + subj_vel_noise * eps
+    ```
+
+    The actor's state is ``[target, cursor]`` for each spatial dimension,
+    followed by ``target_vel`` for each spatial dimension.
+
+    Args:
+        dim (int): number of spatial dimensions (e.g. 2 for tracking in x and y)
+        process_noise (float): standard deviation of the target's random walk
+        action_variability (float): standard deviation of the noise on the
+            cursor's movement
+        action_cost (float): weight of the action cost relative to the distance
+            cost
+        subj_noise (float): standard deviation of the target noise that the
+            actor assumes
+        subj_vel_noise (float): standard deviation of the target velocity noise
+            that the actor assumes
+        sigma_target (float): standard deviation of the target observation noise
+        sigma_cursor (float): standard deviation of the cursor observation noise
+        dt (float): duration of a time step in seconds
+        T (int): number of time steps
+    """
+
     def __init__(
         self,
         dim=1,
